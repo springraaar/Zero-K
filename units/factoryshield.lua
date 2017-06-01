@@ -6,10 +6,17 @@ unitDef = {
   brakeRate                     = 0,
   buildCostMetal                = 600,
   builder                       = true,
+  collisionVolumeOffsets        = [[-4 0 -20]],
+  collisionVolumeScales         = [[112 96 40]],
+  collisionVolumeType           = [[box]],
+  selectionVolumeOffsets        = [[-4 0 4]],
+  selectionVolumeScales         = [[112 16 96]],
+  selectionVolumeType           = [[box]],
   buildingGroundDecalDecaySpeed = 30,
   buildingGroundDecalSizeX      = 7,
   buildingGroundDecalSizeY      = 7,
-  buildingGroundDecalType       = [[factoryshield_aoplane.dds]],
+  -- buildingGroundDecalType       = [[factoryshield_aoplane.dds]],
+
 
   buildoptions                  = {
     [[shieldcon]],
@@ -29,12 +36,6 @@ unitDef = {
   canMove                       = true,
   canPatrol                     = true,
   category                      = [[SINK UNARMED]],
-  collisionVolumeOffsets        = [[0 0 0]],
-  collisionVolumeScales         = [[88 70 54]],
-  collisionVolumeType           = [[box]],
-  selectionVolumeOffsets        = [[0 0 16]],
-  selectionVolumeScales         = [[88 70 88]],
-  selectionVolumeType           = [[box]],
   corpse                        = [[DEAD]],
 
   customParams                  = {
@@ -43,14 +44,11 @@ unitDef = {
     helptext       = [[The Shield Bot Factory is tough yet flexible. Its units are built to take the pain and dish it back out, without compromising mobility. Clever use of unit combos is well rewarded. Key units: Bandit, Thug, Outlaw, Rogue, Racketeer]],
 	helptext_de    = [[Die Shield Bot Factory ist robust aber flexibel. Diese Einheiten werden gebaut, um all die Schmerzen auf sich zu nehmen und wieder zu verteilen, aber ohne Kompromisse bei der Mobilität. Schlauer Einsatz von Einheitenkombos wird gut belohnt. Wichtigste Einheiten: Bandit, Thug, Outlaw, Roach, Dirtbag]],
     sortName       = [[1]],
-    aimposoffset   = [[0 0 -16]],
-    midposoffset   = [[0 0 -16]],
-	solid_factory = [[4]],
   },
 
   energyUse                     = 0,
   explodeAs                     = [[LARGE_BUILDINGEX]],
-  footprintX                    = 6,
+  footprintX                    = 7,
   footprintZ                    = 6,
   iconType                      = [[facwalker]],
   idleAutoHeal                  = 5,
@@ -62,24 +60,27 @@ unitDef = {
   minCloakDistance              = 150,
   moveState        				= 1,
   noAutoFire                    = false,
-  objectName                    = [[factory.s3o]],
+  objectName                    = [[factoryshield.s3o]],
   script                        = "factoryshield.lua",
   selfDestructAs                = [[LARGE_BUILDINGEX]],
   showNanoSpray                 = false,
   sightDistance                 = 273,
   turnRate                      = 0,
-  useBuildingGroundDecal        = true,
+  useBuildingGroundDecal        = false,
   workerTime                    = 10,
-  yardMap                       = [[oooooo oooooo oooooo oooooo cccccc cccccc]],
+  yardMap                       = [[ooooooo ooooooo ooooooo ccccccc ccccccc ccccccc]],
 
   featureDefs                   = {
 
     DEAD  = {
       blocking         = true,
+      collisionVolumeOffsets        = [[-4 0 -20]],
+      collisionVolumeScales         = [[112 96 40]],
+      collisionVolumeType           = [[box]],
       featureDead      = [[HEAP]],
-      footprintX       = 5,
+      footprintX       = 7,
       footprintZ       = 6,
-      object           = [[factory_dead.s3o]],
+      object           = [[factoryshield_dead.s3o]],
     },
 
     HEAP  = {
