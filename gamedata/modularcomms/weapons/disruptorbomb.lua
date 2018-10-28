@@ -14,7 +14,7 @@ local weaponDef = {
 		timeslow_damagefactor = [[6]],
 		muzzleEffectFire = [[custom:RAIDMUZZLE]],
 		manualfire = 1,
-		nofriendlyfire = 1,
+		nofriendlyfire = "needs hax",
 
 		light_camera_height = 2500,
 		light_color = [[1.5 0.75 1.8]],
@@ -36,7 +36,7 @@ local weaponDef = {
 	range                   = 450,
 	reloadtime              = 25,
 	smokeTrail              = true,
-	soundHit                = [[weapon/aoe_aura]],
+    soundHit                = [[weapon/laser/disrupter_explosion]],
 	soundHitVolume          = 8,
 	soundStart              = [[weapon/cannon/cannon_fire3]],
 	--startVelocity           = 350,

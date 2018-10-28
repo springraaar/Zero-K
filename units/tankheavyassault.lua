@@ -32,7 +32,7 @@ unitDef = {
   noAutoFire          = false,
   noChaseCategory     = [[TERRAFORM FIXEDWING SATELLITE GUNSHIP SUB]],
   objectName          = [[corgol_512.s3o]],
-  script	      = [[tankheavyassault.cob]],
+  script              = [[tankheavyassault.lua]],
   selfDestructAs      = [[BIG_UNIT]],
 
   sfxtypes            = {
@@ -76,8 +76,7 @@ unitDef = {
       craterMult              = 0,
 
       customParams            = {
-        reaim_time = 8, -- COB
-		
+		burst = Shared.BURST_RELIABLE,
 	    gatherradius = [[105]],
 	    smoothradius = [[70]],
 	    smoothmult   = [[0.4]],
@@ -116,8 +115,6 @@ unitDef = {
       craterMult              = 0,
 
       customparams = {
-        reaim_time = 8, -- COB
-		
         timeslow_damagefactor = 1,
         timeslow_onlyslow = 1,
         timeslow_smartretarget = 0.33,
@@ -190,7 +187,6 @@ unitDef = {
       interceptedByShieldType = 0,
       noExplode               = true,
       noSelfDamage            = true,
-      --predictBoost			  = 1,
       range                   = 280,
       reloadtime              = 0.16,
       rgbColor                = [[1 1 1]],

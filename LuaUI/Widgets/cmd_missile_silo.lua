@@ -2,12 +2,13 @@ function widget:GetInfo()
 	return {
 		name      = "Missile Silo Commands",
 		desc      = "Okay, take a nap. THEN FIRE ZE MISSILES!",
-		author    = "GoogleFrog",
+		author    = "Histidine",
 		date      = "2018-05-12",
 		license   = "GNU GPL, v2 or later",
 		layer     = 0,
 		enabled   = true,
 		--alwaysStart = true,
+		handler   = true,
 	}
 end
 
@@ -17,6 +18,26 @@ end
 VFS.Include("LuaRules/Configs/customcmds.h.lua")
 
 local siloDefID = UnitDefNames.staticmissilesilo.id
+local missileDefIDs = {}
+local missileNames = {"tacnuke", "seismic", "empmissile", "napalmmissile"}
+
+for i=1,#missileNames do
+  if UnitDefNames[missileNames[i]] then
+	missileDefIDs[UnitDefNames[missileNames[i]].id] = true
+  end
+end
+
+local selectMissilesCmdDesc = {
+	id      = CMD_SELECT_MISSILES,
+	type    = CMDTYPE.ICON,
+	name    = 'Select Missiles',
+	action  = 'selectmissiles',
+	tooltip = "Select this silo's missiles.",
+	texture = "LuaUI/Images/Commands/Bold/missile.png",
+	params  = {}
+}
+
+local SEARCH_RANGE = 48
 --local FIRE_INTERVAL = 90	-- gameframes
 local UPDATE_INTERVAL = 10
 local EMPTY_TABLE = {}
@@ -24,7 +45,6 @@ local EMPTY_TABLE = {}
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 local silos = {}	-- [unitID] = frames before next shot allowed
-local toSelect = nil
 
 local function GetMissiles(siloID, justOne)
 	local missiles = {}
@@ -32,7 +52,7 @@ local function GetMissiles(siloID, justOne)
 	local oldest, oldestFrame = nil, 999999
 	
 	local x, y, z = Spring.GetUnitPosition(siloID)
-	local units = Spring.GetUnitsInRectangle(x - 64, z - 64, x + 64, z + 64)
+	local units = Spring.GetUnitsInRectangle(x - SEARCH_RANGE, z - SEARCH_RANGE, x + SEARCH_RANGE, z + SEARCH_RANGE)
 	
 	for i=1,#units do
 		local unitID = units[i]
@@ -56,23 +76,6 @@ local function GetMissiles(siloID, justOne)
 		return oldest
 	end
 	return missiles, count
-end
-
--- list all the missiles to select and do the actual selection in Update()
--- this allows us to select missiles from multiple silos at once
-local function AwaitMissileSelection(siloID)
-	if not siloID then
-		return
-	end
-	
-	local missiles, count = GetMissiles(siloID)
-	if count == 0 then
-		return
-	end
-	toSelect = toSelect or {}
-	for i=1,#missiles do
-		toSelect[#toSelect + 1] = missiles[i]	
-	end
 end
 
 local function IsWaiting(unitID)
@@ -136,14 +139,49 @@ function widget:UnitFromFactory(unitID, unitDefID, unitTeam, factID, factDefID, 
 	end
 end
 
+--[[
 function widget:UnitCommand(unitID, unitDefID, teamID, cmdID, cmdParams, cmdOptions)
-	if (not silos[unitID]) or cmdOptions.shift then
-		return
-	end
-	if cmdID == CMD_ONECLICK_WEAPON then
-		AwaitMissileSelection(unitID)
-	elseif cmdID == CMD.ATTACK then
+	if cmdID == CMD.ATTACK then
 		--FireOneMissileAtSiloTarget(unitID, cmdParams)
+	end
+end
+]]--
+
+function widget:CommandNotify(cmdID, params, options)
+	if cmdID ~= CMD_SELECT_MISSILES then
+		return false
+	end
+	
+	local selected = Spring.GetSelectedUnitsSorted()
+	if not selected[siloDefID] then
+		return true
+	end
+	
+	local toSelect = toSelect or {}
+	for i=1,#selected[siloDefID] do
+		local unitID = selected[siloDefID][i]
+		local x, y, z = Spring.GetUnitPosition(unitID)
+		local missiles = GetMissiles(unitID)
+		for i=1,#missiles do
+			toSelect[#toSelect + 1] = missiles[i]
+		end
+	end
+	if #toSelect > 0 then
+		local alt, ctrl, meta, shift = Spring.GetModKeyState()
+		Spring.SelectUnitArray(toSelect, shift)
+	end
+	
+	return true
+end
+
+-- add missile selection command
+function widget:CommandsChanged()
+	local selectedUnits = Spring.GetSelectedUnits()
+	local unitID = selectedUnits and selectedUnits[1]
+	local unitDefID = unitID and Spring.GetUnitDefID(unitID)
+	if unitDefID == siloDefID then
+	  local customCommands = widgetHandler.customCommands
+	  table.insert(customCommands, selectMissilesCmdDesc)
 	end
 end
 
@@ -160,15 +198,6 @@ end
 function widget:UnitGiven(unitID, unitDefID, unitTeam, oldTeam)
 	silos[unitID] = nil
 	widget:UnitCreated(unitID, unitDefID, unitTeam)
-end
-
-function widget:Update()
-	if toSelect then
-		local alt, ctrl, meta, shift = Spring.GetModKeyState()
-		local append = ctrl or shift	-- can't be always true because selection rank filters out the missiles from selection
-		Spring.SelectUnitArray(toSelect, append)
-		toSelect = nil
-	end
 end
 
 function widget:GameFrame(n)

@@ -29,7 +29,7 @@ VFS.Include("LuaRules/Utilities/rulesParam.lua")
 
 local function GetBuildIconFrame(udef) 
 	local cp = udef.customParams
-	if (udef.isBuilder and udef.speed>0) then
+	if udef.isMobileBuilder then
 		return consTex
 
 	elseif (udef.isBuilder or udef.isFactory) then
@@ -108,6 +108,10 @@ local function WriteTable(concatArray, tab, tabName, params)
 	end
 	
 	local function ProcessKeyValuePair(i,v, isArray, lastItem)
+		if type(v) == "function" then
+			return
+		end
+	
 		local pairEndLine = (lastItem and "") or (isArray and comma) or endLine
 		if isDict then
 			str = str .. WriteIndents(params.numIndents + 1)

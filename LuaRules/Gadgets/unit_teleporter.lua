@@ -21,12 +21,11 @@ local BEACON_WAIT_RANGE_MOVE = 150
 local BEACON_TELEPORT_RADIUS = 200
 local BEACON_TELEPORT_RADIUS_SQR = BEACON_TELEPORT_RADIUS^2
 
-local getMovetype = Spring.Utilities.getMovetype
 -- Used in synced and unsynced
 local canTeleport = {}
 for i = 1, #UnitDefs do
 	local ud = UnitDefs[i]
-	if ud.isFactory or not (ud.speed == 0 or getMovetype(ud) == 0) then
+	if ud.isFactory or not (ud.isImmobile or ud.isStrafingAirUnit) then
 		canTeleport[i] = true
 	end
 end
@@ -244,7 +243,7 @@ local function Teleport_AllowCommand(unitID, unitDefID, cmdID, cmdParams, cmdOpt
 	return gadget:AllowCommand(unitID, unitDefID, false, cmdID, cmdParams, cmdOptions)
 end
 
--- pick a point on map to teleport to
+-- pick a point on map (towards random one of 8 directions) to teleport to
 -- ud is teleportiee's unitdef, tx and tz are Djinn's position
 local function GetTeleTargetPos(ud, tx, tz)
 	local size = ud.xsize

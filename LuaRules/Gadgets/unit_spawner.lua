@@ -987,6 +987,12 @@ local function MorphQueen()
 	else
 		data.queenID = spCreateUnit(queenMorphName, x, y, z, "n", queenOwner)
 	end
+
+	if not data.queenID then
+		Spring.Echo("LUA_ERRRUN chicken queen was not recreated correctly")
+		return
+	end
+
 	data.morphed = not data.morphed
 	SetMorphFrame()
 	
@@ -1042,7 +1048,7 @@ end
 function gadget:UnitFinished(unitID, unitDefID, unitTeam)
 	--burrow targetting
 	local name = UnitDefs[unitDefID].name
-	if (humanTeams[unitTeam]) and (UnitDefs[unitDefID].speed == 0) and (not noTarget.name) then
+	if (humanTeams[unitTeam]) and UnitDefs[unitDefID].isImmobile and (not noTarget.name) then
 		--echo("Building ID "..unitID .." added to target array")
 		local x, y, z = spGetUnitPosition(unitID)
 		data.targets[unitID] = unitTeam
@@ -1279,6 +1285,9 @@ function gadget:FeatureDestroyed(featureID, allyTeam)
 end
 
 function gadget:GameOver()
+
+	data.morphFrame = -1
+
 	local function ExceedsOne(num)
 		num = tonumber(num) or 1
 		return num > 1

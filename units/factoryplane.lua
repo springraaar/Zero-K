@@ -33,7 +33,7 @@ unitDef = {
     pad_count = 1,
     landflystate   = [[0]],
     sortName = [[4]],
-	modelradius    = [[50]],
+	modelradius    = [[51]], -- at 50 planefighter won't respond to Bugger Off calls
 	midposoffset   = [[0 20 0]],
 	nongroundfac = [[1]],
 	default_spacing = 8,
@@ -61,7 +61,7 @@ unitDef = {
   turnRate                      = 0,
   useBuildingGroundDecal        = true,
   waterline						= 0,
-  workerTime                    = 10,
+  workerTime                    = Shared.FACTORY_BUILDPOWER,
   yardMap                       = [[oooooooo oooooooo oooooooo occooooo occooooo oooooooo oooooooo]],
 
   featureDefs                   = {

@@ -322,7 +322,7 @@ if (not Game.mapDamage) then  -- map has "notDeformable = true", or "disablemapd
 
 	for _, cmdDesc in ipairs(cmdDescsArray) do
 		cmdDesc.disabled = true
-		dDesc.tooltip  = cmdDesc.tooltip .. disabledText
+		cmdDesc.tooltip  = cmdDesc.tooltip .. disabledText
 	end
 elseif modOptions.terrarestoreonly == "1" then
 	include("LuaRules/colors.h.lua")
@@ -1332,9 +1332,10 @@ local function TerraformWall(terraform_type, mPoint, mPoints, terraformHeight, u
 			local teamY = CallAsTeam(team, function () return spGetGroundHeight(segment[i].position.x,segment[i].position.z) end)
 			
 			local id = spCreateUnit(terraunitDefID, terraunitX, teamY or 0, terraunitZ, 0, team, true)
-			spSetUnitHealth(id, 0.01)
-			
-            if id then			
+			if not id then
+				-- TODO: notify user? SendToUnsynced("terra_failed_unitlimit", team, terraunitX, terraunitZ) -> Script.LuaUI.something -> Spring.MarkerAddPoint
+			else
+				spSetUnitHealth(id, 0.01)
 				terraunitX, terraunitZ = getPointInsideMap(terraunitX,terraunitZ)
 				setupTerraunit(id, team, terraunitX, false, terraunitZ)
 				spSetUnitRulesParam(id, "terraformType", terraform_type)
@@ -2509,7 +2510,7 @@ end
 local function updateTerraform(health,id,arrayIndex,costDiff)
 	local terra = terraformUnit[id]
 	
-	if terra.toRemove and (costDiff > 0.1 or terra.baseCostSpent > 0.1) then
+	if terra.toRemove and terra.totalSpent > 0.1 then
 		-- Removing terraform too early enables structure-detecting maphax.
 		deregisterTerraformUnit(id,arrayIndex,2)
 		spDestroyUnit(id, false, true)
@@ -3670,7 +3671,7 @@ function gadget:UnitCreated(unitID, unitDefID, teamID)
 	end
 	
 	-- add structure to structure table
-    if (ud.isBuilding == true or ud.maxAcc == 0) and (not ud.customParams.mobilebuilding) then
+	if ud.isImmobile and not ud.customParams.mobilebuilding then
 	    local ux, uy, uz = spGetUnitPosition(unitID)
 		ux = floor((ux+4)/8)*8
 		uz = floor((uz+4)/8)*8

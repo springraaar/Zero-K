@@ -254,6 +254,14 @@ local options = {
     def=false,
   },
   {
+    key='campaign_chassis',
+    name='Allow campaign commander chassis',
+    desc='Allows you to choose the campaign commander chassis.',
+    type='bool',
+    section= 'startconds',
+    def=false,
+  },
+  {
     key='typemapsetting',
     name='No roads',
     desc='Some maps have roads that allow faster unit movement. When enabled, units will move at their regular unboosted speed on roads.',
@@ -413,6 +421,59 @@ local options = {
     section= 'silly',
     def    = false,
   },
+	{
+		key     = 'maxunits',
+		name    = 'Max units',
+		desc    = 'Determines how many units and buildings a player is allowed to own at a time',
+		type    = 'number',
+		section = 'multipliers',
+		def     = 10000, -- don't change to anything reachable, won't take effect; engine default is ~10K 
+		                 -- (actually 32K / #teams so 1v1+gaia allows ~10K each)
+		min     = 10,
+		max     = 10000,
+		step    = 10,
+	},
+	{
+		key     = 'minspeed',
+		name    = 'Minimum game speed',
+		desc    = 'Sets the minimum speed that the players will be allowed to change to',
+		type    = 'number',
+		section = 'multipliers',
+		def     = 0.3, -- don't change, won't take effect as this is engine value
+		min     = 0.1,
+		max     = 2.0,
+		step    = 0.1,
+	},
+	{
+		key     = 'maxspeed',
+		name    = 'Maximum game speed',
+		desc    = 'Sets the maximum speed that the players will be allowed to change to',
+		type    = 'number',
+		section = 'multipliers',
+		def     = 20.0, -- don't change, won't take effect as this is engine value
+		min     = 0.5,
+		max     = 20.0,
+		step    = 0.1,
+	},
+	{
+		key     = 'disablemapdamage',
+		name    = 'Disable map deformation',
+		desc    = 'Prevents the map shape from being changed by weapons and terraforming',
+		type    = 'bool',
+		section = 'mapsettings',
+		def     = false, -- don't change, won't take effect as this is engine value
+	},
+	--[[ Engine option, would need proper UI before enabling
+	{
+		key     = 'fixedallies',
+		name    = 'Disallow ceasefire',
+		desc    = 'Is ceasefire banned? For FFA.',
+		type    = 'bool',
+		section = 'experimental',
+		def     = true, -- don't change, won't take effect as this is engine value
+	},
+	]]
+
   --{
   --  key		= "enableunlocks",
   --  name	= "Enable unlock system",
@@ -517,6 +578,17 @@ local options = {
     step   = 1,
   },
   {
+    key    = 'wavesizemult',
+    name   = 'Wave size mult',
+    desc   = 'Increases or decreases the size of each chicken wave.',
+    type   = 'number',
+    section= 'chicken',
+    def    = 1,
+    min    = 0.1,
+    max    = 10,
+    step   = 0.05,
+  },
+  {
     key    = 'queentime',
     name   = 'Queen Time',
     desc   = 'How soon the queen appears on her own, minutes.',
@@ -526,6 +598,25 @@ local options = {
     min    = 1,
     max    = 200,
     step   = 1,
+  },
+  {
+    key    = 'queenhealthmod',
+    name   = 'Queen Health Mult',
+    desc   = 'Queen health multiplier',
+    type   = 'number',
+    section= 'chicken',
+    def    = 1,
+    min    = 0.1,
+    max    = 10,
+    step   = 0.05,
+  },
+  {
+    key     = 'chicken_endless',
+    name    = 'Infinite Chicken',
+    desc    = 'Queen does not spawn, waves go on forever.',
+    type    = "bool",
+    def     = false,
+    section = 'chicken',
   },
   {
     key    = 'graceperiod',
@@ -560,6 +651,17 @@ local options = {
     max    = 5,
     step   = 0.05,
   },
+  {
+    key    = 'chicken_maxtech',
+    name   = 'Max Tech Level',
+    desc   = 'Maximum timer for chicken tech level progression, in seconds. Lowering this value will exclude some or most chicken types. Applies to all difficulties.',
+    type   = 'number',
+    section= 'chicken',
+    def    = 9000,
+    min    = 0,
+    max    = 9000,
+    step   = 60,
+  },
 --[[  
   {
 	key    = 'burrowtechtime',
@@ -576,7 +678,7 @@ local options = {
   {
 	key    = 'burrowqueentime',
 	name   = 'Burrow Queen Time',
-	desc   = 'How much time each burrow death subtracts from queen appearance time, seconds',
+	desc   = 'How much time each burrow death subtracts from queen appearance time, seconds.',
 	type   = 'number',
 	section= 'chicken',
 	def    = 15,

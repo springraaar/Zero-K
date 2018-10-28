@@ -286,7 +286,7 @@ unitDef = {
 
       customparams = {
         timeslow_damagefactor = 10,
-        nofriendlyfire = 1,
+        nofriendlyfire = "needs hax",
       },
       
       damage                  = {
@@ -307,7 +307,7 @@ unitDef = {
       reloadtime              = 1,
       size                    = 15,
       sizeDecay               = 0.03,
-      soundHit                = [[weapon/aoe_aura]],
+      soundHit                = [[weapon/laser/disrupter_explosion]],
       soundStart              = [[weapon/cannon/big_begrtha_gun_fire]],
       stages                  = 30,
       turret                  = true,
