@@ -1,3 +1,5 @@
+-- TODO: CACHE INCLUDE FILE
+-- May not be worth it due to the rarity of comms, and the complexity of this file.
 local INLOS = {inlos = true}
 local spSetUnitShieldState = Spring.SetUnitShieldState
 
@@ -9,6 +11,7 @@ local weaponNumMap = {}
 local weaponsInitialized = false
 local paceMult
 local scaleMult
+local weaponCegs = {}
 
 local commWreckUnitRulesParam = {"comm_baseWreckID", "comm_baseHeapID"}
 local moduleWreckNamePrefix = {"module_wreck_", "module_heap_"}
@@ -99,28 +102,55 @@ end
 
 local function EmitWeaponFireSfx(pieceNum, num)
 	local weaponNum = GetWeapon(num)
-	if weaponNum == 1 then
-		if weapon1 then
-			EmitSfx(pieceNum, 1029 + weapon1*2)
+	if Spring.GetCEGID then
+		if weaponCegs[weaponNum] and weaponCegs[weaponNum].misc then
+			EmitSfx(pieceNum, weaponCegs[weaponNum].misc)
 		end
-	elseif weaponNum == 2 then
-		if weapon1 then
-			EmitSfx(pieceNum, 1029 + weapon2*2)
+	else
+		if weaponNum == 1 then
+			if weapon1 then
+				EmitSfx(pieceNum, 1029 + weapon1*2)
+			end
+		elseif weaponNum == 2 then
+			if weapon1 then
+				EmitSfx(pieceNum, 1029 + weapon2*2)
+			end
 		end
 	end
 end
 
 local function EmitWeaponShotSfx(pieceNum, num)
 	local weaponNum = GetWeapon(num)
-	if weaponNum == 1 then
-		if weapon1 then
-			EmitSfx(pieceNum, 1030 + weapon1*2)
+	if Spring.GetCEGID then
+		if weaponCegs[weaponNum] and weaponCegs[weaponNum].muzzle then
+			EmitSfx(pieceNum, weaponCegs[weaponNum].muzzle)
 		end
-	elseif weaponNum == 2 then
-		if weapon2 then
-			EmitSfx(pieceNum, 1030 + weapon2*2)
+	else
+		if weaponNum == 1 then
+			if weapon1 then
+				EmitSfx(pieceNum, 1030 + weapon1*2)
+			end
+		elseif weaponNum == 2 then
+			if weapon2 then
+				EmitSfx(pieceNum, 1030 + weapon2*2)
+			end
 		end
 	end
+end
+
+local function GetCegTable(wd)
+	if not Spring.GetCEGID then
+		return
+	end
+	local cp = wd.customParams
+	if not (cp and (cp.muzzleeffectshot or cp.misceffectshot)) then
+		return
+	end
+	local cegs = {
+		muzzle = cp.muzzleeffectshot and (SFX.GLOBAL + Spring.GetCEGID(cp.muzzleeffectshot:gsub("custom:",""))),
+		misc = cp.misceffectshot and (SFX.GLOBAL + Spring.GetCEGID(cp.misceffectshot:gsub("custom:",""))),
+	}
+	return cegs
 end
 
 local function UpdateWeapons(weaponName1, weaponName2, shieldName, rangeMult, damageMult)
@@ -137,6 +167,7 @@ local function UpdateWeapons(weaponName1, weaponName2, shieldName, rangeMult, da
 		Spring.SetUnitRulesParam(unitID, "comm_weapon_id_1", (weaponDef1 and weaponDef1.weaponDefID) or 0, INLOS)
 		Spring.SetUnitRulesParam(unitID, "comm_weapon_num_1", weapon1, INLOS)
 		Spring.SetUnitRulesParam(unitID, "comm_weapon_manual_1", (weaponDef1 and weaponDef1.manualFire and 1) or 0, INLOS)
+		weaponCegs[1] = GetCegTable(WeaponDefs[weaponDef1.weaponDefID])
 	end
 	
 	if weapon2 then
@@ -144,6 +175,7 @@ local function UpdateWeapons(weaponName1, weaponName2, shieldName, rangeMult, da
 		Spring.SetUnitRulesParam(unitID, "comm_weapon_id_2", (weaponDef2 and weaponDef2.weaponDefID) or 0, INLOS)
 		Spring.SetUnitRulesParam(unitID, "comm_weapon_num_2", weapon2, INLOS)
 		Spring.SetUnitRulesParam(unitID, "comm_weapon_manual_2", (weaponDef2 and weaponDef2.manualFire and 1) or 0, INLOS)
+		weaponCegs[2] = GetCegTable(WeaponDefs[weaponDef2.weaponDefID])
 	end
 
 	if shield then
@@ -185,7 +217,8 @@ local function UpdateWeapons(weaponName1, weaponName2, shieldName, rangeMult, da
 		else
 			maxRange = range
 		end
-		Spring.SetUnitWeaponState(unitID, weapon1, "range", range)	
+		Spring.SetUnitWeaponState(unitID, weapon1, "range", range)
+		Spring.SetUnitWeaponDamages(unitID, weapon1, "dynDamageRange", range)
 		
 		local damages = WeaponDefs[weaponDef1.weaponDefID].damages
 		for k, v in pairs(damages) do
@@ -211,6 +244,7 @@ local function UpdateWeapons(weaponName1, weaponName2, shieldName, rangeMult, da
 			maxRange = range
 		end
 		Spring.SetUnitWeaponState(unitID, weapon2, "range", range)
+		Spring.SetUnitWeaponDamages(unitID, weapon2, "dynDamageRange", range)
 		
 		local damages = WeaponDefs[weaponDef2.weaponDefID].damages
 		for k, v in pairs(damages) do

@@ -67,6 +67,8 @@ unitDef = {
       customParams            = {
 		burst = Shared.BURST_RELIABLE,
 
+		restrict_in_widgets = 1,
+
       lups_explodelife = 1.5,
 		stats_hide_dps = 1, -- meaningless
 		stats_hide_reload = 1,
@@ -92,7 +94,7 @@ unitDef = {
       reloadtime              = 10,
       smokeTrail              = false,
       soundHit                = [[explosion/mini_nuke]],
-      soundStart              = [[weapon/missile/tacnuke_launch2]],
+      soundStart              = [[weapon/missile/tacnuke_launch]],
       tolerance               = 4000,
       turnrate                = 18000,
       weaponAcceleration      = 180,

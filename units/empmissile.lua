@@ -63,6 +63,8 @@ unitDef = {
 	  customparams = {
 		burst = Shared.BURST_RELIABLE,
 
+		restrict_in_widgets = 1,
+
 		stats_hide_dps = 1, -- one use
 		stats_hide_reload = 1,
 		
@@ -88,7 +90,7 @@ unitDef = {
       reloadtime              = 3,
       smokeTrail              = false,
       soundHit                = [[weapon/missile/emp_missile_hit]],
-      soundStart              = [[weapon/missile/tacnuke_launch2]],
+      soundStart              = [[weapon/missile/tacnuke_launch]],
       tolerance               = 4000,
       tracks                  = false,
       turnrate                = 12000,

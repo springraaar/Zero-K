@@ -596,7 +596,7 @@ local function GetUnitRegenString(unitID, ud)
 	if unitID and (not select(3, spGetUnitIsStunned(unitID))) then
 		local regen_timer = spGetUnitRulesParam(unitID, "idleRegenTimer")
 		if regen_timer and ud then
-			if ((ud.idleTime <= 300) and (regen_timer > 0)) then
+			if ((ud.idleTime <= 600) and (regen_timer > 0)) then
 				return "  (" .. math.ceil(regen_timer / 30) .. "s)"
 			else
 				local regenMult = (1 - (spGetUnitRulesParam(unitID, "slowState") or 0)) * (1 - (spGetUnitRulesParam(unitID,"disarmed") or 0))
@@ -627,6 +627,13 @@ local function GetUnitRegenString(unitID, ud)
 end
 
 local function GetUnitShieldRegenString(unitID, ud)
+	if ud.customParams.shield_recharge_delay or true then
+		local shieldRegen = spGetUnitRulesParam(unitID, "shieldRegenTimer")
+		if shieldRegen and shieldRegen > 0 then
+			return "  (" .. math.ceil(shieldRegen / 30) .. "s)"
+		end
+	end
+	
 	local mult = spGetUnitRulesParam(unitID,"totalReloadSpeedChange") or 1 * (1 - (spGetUnitRulesParam(unitID, "shieldChargeDisabled") or 0))
 	if mult == 0 then
 		return ""

@@ -1,4 +1,3 @@
--- WARNING: This is a temporary file. Please modify as you see fit! --
 function widget:GetInfo()
 	return {
 		name	= "Chili Share menu v1.24",
@@ -1427,15 +1426,17 @@ local lastWindow = false
 local myAllyTeamID = -1
 
 function widget:Update(dt)
-	local f = Spring.GetGameFrame()
-	local alt,ctrl,_,shift = Spring.GetModKeyState()
+	if window and not window.visible then
+		return
+	end
 	if window and window.visible then
 		local showkey = string.lower(WG.crude.GetHotkey("epic_chili_share_menu_v1.24_sharemenu"))
-		--Spring.Echo(showkey)
 		if (Spring.GetKeyState(Spring.GetKeyCode(showkey)) ~= window.visible) then
 			window:ToggleVisibility()
 		end
 	end
+	local f = Spring.GetGameFrame()
+	local alt,ctrl,_,shift = Spring.GetModKeyState()
 	dtSum = dtSum + dt
 	if (f - lastUpdate >= 30 or dtSum >= 2 or window and lastWindow ~= window.visible) then
 		lastWindow = window and window.visible

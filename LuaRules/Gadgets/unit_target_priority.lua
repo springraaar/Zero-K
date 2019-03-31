@@ -268,11 +268,19 @@ local function GetGravityWeaponPriorityModifier(unitID, attackerWeaponDefID)
 end
 
 local function GetDisarmWeaponPriorityModifier(unitID, attackerWeaponDefID)
-	local stunned = GetUnitStunnedOrInBuild(unitID)
-	if stunned <= disarmWeaponTimeDefs[attackerWeaponDefID] then
-		return GetNormalWeaponPriorityModifier(unitID, attackerWeaponDefID)
+	local stunned, buildProgress = GetUnitStunnedOrInBuild(unitID)
+	local priority = (disarmPenaltyDefs[attackerWeaponDefID] or 10) + GetNormalWeaponPriorityModifier(unitID, attackerWeaponDefID)
+	local fewAttackers = false
+	if buildProgress == 1 and (remStunAttackers[unitID] or 0) < STUN_ATTACKERS_IDLE_REQUIREMENT then
+		remStunAttackers[unitID] = (remStunAttackers[unitID] or 0) + 1
+		priority = priority - stunned*2 -- Counteract stunned penalty in normal priority
+		fewAttackers = true
 	end
-	return (disarmPenaltyDefs[attackerWeaponDefID] or 10) + GetNormalWeaponPriorityModifier(unitID, attackerWeaponDefID)
+	if fewAttackers or stunned <= disarmWeaponTimeDefs[attackerWeaponDefID] then
+		return priority
+	end
+
+	return (disarmPenaltyDefs[attackerWeaponDefID] or 10) + priority
 end
 
 --------------------------------------------------------------------------------
@@ -280,11 +288,19 @@ end
 -- Priority callin
 local DEF_TARGET_TOO_FAR_PRIORITY = 100000 --usually numbers are around several millions, if target is out of range
 
-function gadget:AllowWeaponTarget(unitID, targetID, attackerWeaponNum, attackerWeaponDefID, defPriority)
+--function gadget:AllowUnitTargetRange(unitID, defRange)
+--	return true, defRange
+--end
 
+function gadget:AllowWeaponTarget(unitID, targetID, attackerWeaponNum, attackerWeaponDefID, defPriority)
+	if not defPriority then
+		-- This callin is effectively script.BlockShot but for CommandAI.
+		-- The engine will discard target priority information.
+		return true
+	end
 	--Spring.Echo("TARGET CHECK")
 	if defPriority > DEF_TARGET_TOO_FAR_PRIORITY then
-		return defPriority --hope engine is not that wrong about the best target outside of the range
+		return true, defPriority --hope engine is not that wrong about the best target outside of the range
 	end
 	
 	if (not targetID) or (not unitID) or (not attackerWeaponDefID) then
@@ -426,9 +442,14 @@ function gadget:Initialize()
 		local unitDefID = spGetUnitDefID(unitID)
 		gadget:UnitCreated(unitID, unitDefID)
 	end
-	-- Hopefully not all weapon callins will need to be watched
-	-- in some future version.
-	for weaponID,_ in pairs(WeaponDefs) do
-		Script.SetWatchWeapon(weaponID, true)
+
+	for weaponID,wd in pairs(WeaponDefs) do
+		if wd.customParams and wd.customParams.is_unit_weapon then
+			if Script.SetWatchAllowTarget then
+				Script.SetWatchAllowTarget(weaponID, true)
+			else
+				Script.SetWatchWeapon(weaponID, true)
+			end
+		end
 	end
 end

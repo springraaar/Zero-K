@@ -1145,8 +1145,7 @@ function gadget:GameFrame(n)
 			local chickens = spGetTeamUnits(chickenTeamID) 
 			for i=1,#chickens do
 				local unitID = chickens[i]
-				local cmdQueue = spGetCommandQueue(unitID, 1)
-				if (not (cmdQueue and cmdQueue[1])) then
+				if (not Spring.Utilities.GetUnitFirstCommand(unitID)) then
 					--AttackNearestEnemy(unitID)
 					if (difficulty > 1) and (unitID == data.queenID) then
 						spGiveOrderToUnit(unitID, CMD_RAW_MOVE, data.targetCache, CMD.OPT_SHIFT)
@@ -1318,7 +1317,7 @@ function gadget:GameOver()
 end
 
 function gadget:Load(zip)
-	if not GG.SaveLoad then
+	if not (GG.SaveLoad and GG.SaveLoad.ReadFile) then
 		Spring.Log(gadget:GetInfo().name, LOG.ERROR, "ERROR: Chicken Spawner failed to access save/load API")
 		return
 	end

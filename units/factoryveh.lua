@@ -45,6 +45,9 @@ unitDef = {
 	midposoffset   = [[0 0 -10]],
 	modelradius    = [[100]],
 	unstick_help   = 1,
+    selectionscalemult = 1,
+	factorytab       = 1,
+	shared_energy_gen = 1,
   },
 
   energyUse                     = 0,
@@ -70,7 +73,7 @@ unitDef = {
   turnRate                      = 0,
   useBuildingGroundDecal        = true,
   workerTime                    = Shared.FACTORY_BUILDPOWER,
-  yardMap                       = "xoooooox xoooooox xoooooox xccccccx xccccccx xccccccx xccccccx xccccccx",
+  yardMap                       = "oooooooo oooooooo oooooooo yccccccy yccccccy yccccccy yccccccy yccccccy",
 
   featureDefs                   = {
 

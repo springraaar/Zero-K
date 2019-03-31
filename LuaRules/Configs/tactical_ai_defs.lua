@@ -381,6 +381,7 @@ local shortRangeDiveArray = SetMinus(SetMinus(allGround, diverSkirmieeArray), lo
 -- selfVelocityPrediction (defaults to false): Whether the unit predicts its own velocity when calculating range.
 -- reloadSkirmLeeway (defaults to false): Increase skirm range by reloadSkirmLeeway*remainingReloadFrames when reloading.
 -- skirmBlockedApproachFrames (defaults to false): Stop skirming after this many frames of being fully reloaded if not set to attack move.
+-- skirmBlockApproachHeadingBlock (defaults to false): Blocks the effect of skirmBlockedApproachFrames if the dot product of enemyVector and unitFacing exceeds skirmBlockApproachHeadingBlock.
 
 --*** swarms(defaults to empty): the table of units that this unit will jink towards and strafe
 -- maxSwarmLeeway (defaults to Weapon range): (Weapon range - maxSwarmLeeway) = Max range that the unit will begin strafing targets while swarming
@@ -532,7 +533,7 @@ local behaviourConfig = {
   
 	-- longer ranged swarmers
 	["shieldraid"] = {
-		skirms = shortRangeSkirmieeArray, 
+		skirms = riotRangeSkirmieeArray, 
 		swarms = lowRangeSwarmieeArray, 
 		flees = {},
 		fightOnlyUnits = shortRangeExplodables,
@@ -714,6 +715,15 @@ local behaviourConfig = {
 		skirmLeeway = 20, 
 		velocityPrediction = 20
 	},
+	["jumpcon"] = {
+		skirms = lowMedRangeSkirmieeArray, 
+		swarms = {}, 
+		flees = {},
+		fightOnlyUnits = medRangeExplodables,
+		maxSwarmLeeway = 0, 
+		skirmLeeway = 0, 
+		velocityPrediction = 20
+	},
 	["spiderriot"] = {
 		skirms = lowMedRangeSkirmieeArray, 
 		swarms = {}, 
@@ -770,9 +780,10 @@ local behaviourConfig = {
 		flees = {},
 		fightOnlyUnits = medRangeExplodables,
 		maxSwarmLeeway = 0, 
-		skirmLeeway = -30,
+		skirmLeeway = -15,
 		stoppingDistance = 5,
 		skirmBlockedApproachFrames = 40,
+		skirmBlockApproachHeadingBlock = 0,
 	},
 	["tankriot"] = {
 		skirms = medRangeSkirmieeArray, 
@@ -877,7 +888,8 @@ local behaviourConfig = {
 		fightOnlyUnits = medRangeExplodables,
 		maxSwarmLeeway = 30, 
 		minSwarmLeeway = 90, 
-		skirmLeeway = 20, 
+		skirmLeeway = 30, 
+		skirmBlockedApproachFrames = 20,
 	},
 	["shieldassault"] = {
 		skirms = riotRangeSkirmieeArray, 
@@ -974,6 +986,7 @@ local behaviourConfig = {
 		skirmOrderDis = 200,
 		velocityPrediction = 90,
 		skirmBlockedApproachFrames = 60,
+		skirmBlockApproachHeadingBlock = 0,
 	},
 	["tankheavyassault"] = {
 		skirms = medRangeSkirmieeArray, 
@@ -1051,10 +1064,11 @@ local behaviourConfig = {
 		fightOnlyUnits = medRangeExplodables,
 		maxSwarmLeeway = 30, 
 		minSwarmLeeway = 130, 
-		skirmLeeway = 30,
-		skirmOrderDis = 200,
-		velocityPrediction = 60,
+		skirmLeeway = -5,
+		skirmOrderDis = 120,
+		velocityPrediction = 135,
 		skirmBlockedApproachFrames = 40,
+		skirmBlockApproachHeadingBlock = -0.3,
 	},
 	["shipskirm"] = {
 		skirms = longRangeSkirmieeArray, 
@@ -1067,8 +1081,8 @@ local behaviourConfig = {
 		skirmOrderDis = 200,
 		velocityPrediction = 90,
 		skirmBlockedApproachFrames = 40,
+		skirmBlockApproachHeadingBlock = -0.2,
 	},
-	
 	
 	-- weird stuff
 	["vehsupport"] = {

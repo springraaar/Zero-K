@@ -44,7 +44,7 @@ local spMoveCtrlGetTag = Spring.MoveCtrl.GetTag
 local bomberWeaponNamesDefs, bomberWeaponDefs, bomberUnitDefs = include("LuaRules/Configs/bomber_dive_defs.lua")
 
 local UPDATE_FREQUENCY = 15
-local SQRT_TWO = 0.8 -- All hit tests have leeway so we don't need to be too fussy about the square root of two.
+local SQRT_TWO = math.sqrt(2)
 local bombers = {}
 local VOL_SPHERE = 3
 
@@ -74,14 +74,30 @@ local function setFlyHigh(unitID)
 end
 
 local function GetAttackTarget(unitID)
-	local cQueue = Spring.GetCommandQueue(unitID,1)
-	if cQueue and #cQueue == 1 and cQueue[1].id == CMD_ATTACK and cQueue[1].params and cQueue[1].params[1] and (not cQueue[1].params[2]) then
-		local targetID = cQueue[1].params[1]
+	local cmdID, cmdParam_1, cmdParam_2
+	if Spring.Utilities.COMPAT_GET_ORDER then
+		local queue = Spring.GetCommandQueue(unitID, 1)
+		if queue and queue[1] then
+			cmdID, cmdParam_1, cmdParam_2 = queue[1].id, queue[1].params[1], queue[1].params[2]
+		end
+	else
+		cmdID, _, _, cmdParam_1, cmdParam_2 = Spring.GetUnitCurrentCommand(unitID)
+	end
+	
+	if cmdID and cmdID == CMD_ATTACK and cmdParam_1 and (not cmdParam_2) then
+		local targetID = cmdParam_1
 		if Spring.ValidUnitID(targetID) then
 			local unitDefID = Spring.GetUnitDefID(targetID)
 			local ud = UnitDefs[unitDefID]
 			return targetID, not ud.isImmobile
 		end
+	end
+	
+	local targetType, isUser, targetID = Spring.GetUnitWeaponTarget(unitID, 3)
+	if targetType <= 1 and targetID and Spring.ValidUnitID(targetID) then
+		local unitDefID = Spring.GetUnitDefID(targetID)
+		local ud = UnitDefs[unitDefID]
+		return targetID, not ud.isImmobile
 	end
 end
 
@@ -156,7 +172,14 @@ local function GetWantedBomberHeight(unitID, bomberID, config, underShield)
 			scaleZ = scaleZ*SQRT_TWO
 		end
 		local horSize = config.sizeSafetyFactor*(math.min(scaleX, scaleZ)/2 - math.sqrt(offsetX^2 + offsetZ^2))
-		local speed = UnitDefs[unitDefID].speed/30
+		local ud = UnitDefs[unitDefID]
+		local speed = ud.speed/30
+		if ud.customParams and ud.customParams.jump_speed then
+			local jumpSpeed = tonumber(ud.customParams.jump_speed)
+			if jumpSpeed and jumpSpeed/2 > speed then
+				speed = jumpSpeed/2
+			end
+		end
 		hitabilityDef[unitDefID] = horSize/speed
 		if speed > 3 then
 			hitabilityDef[unitDefID] = math.max(0, hitabilityDef[unitDefID] + 2 - speed*1.5)
@@ -249,22 +272,24 @@ function gadget:ShieldPreDamaged(proID, proOwnerID, shieldEmitterWeaponNum, shie
 	if proID and bomberWeaponNamesDefs[Spring.GetProjectileName(proID)] then
 		if proOwnerID and Spring.ValidUnitID(proOwnerID) and bombers[proOwnerID] and bombers[proOwnerID].diveState == 1 then
 			if shieldCarrierUnitID and Spring.ValidUnitID(shieldCarrierUnitID) and shieldEmitterWeaponNum then
-				local wid = UnitDefs[Spring.GetUnitDefID(shieldCarrierUnitID)].weapons[shieldEmitterWeaponNum].weaponDef
-				if WeaponDefs[wid] and WeaponDefs[wid].shieldPower > bombers[proOwnerID].config.diveDamage 
-						and ((not Spring.GetUnitRulesParam(proOwnerID, "noammo")) or Spring.GetUnitRulesParam(proOwnerID, "noammo") ~= 1) then
-					local targetID = GetAttackTarget(proOwnerID)
-					bombers[proOwnerID].underShield = gameFrame + 30
-					if targetID then
-						local height = GetWantedBomberHeight(targetID, proOwnerID, bombers[proOwnerID].config, true)
-						local distance = GetCollisionDistance(proOwnerID, targetID)
-						temporaryDive(proOwnerID, 8, height, distance)
-					else
-						temporaryDive(proOwnerID, 8, 40)
+				--local wid = UnitDefs[Spring.GetUnitDefID(shieldCarrierUnitID)].weapons[shieldEmitterWeaponNum].weaponDef
+				--if WeaponDefs[wid] and WeaponDefs[wid].shieldPower > bombers[proOwnerID].config.diveDamage then
+					if ((not Spring.GetUnitRulesParam(proOwnerID, "noammo")) or Spring.GetUnitRulesParam(proOwnerID, "noammo") ~= 1) then
+						local targetID = GetAttackTarget(proOwnerID)
+						bombers[proOwnerID].underShield = gameFrame + 45
+						if targetID then
+							local height = GetWantedBomberHeight(targetID, proOwnerID, bombers[proOwnerID].config, true)
+							local distance = GetCollisionDistance(proOwnerID, targetID)
+							temporaryDive(proOwnerID, 45, height, distance)
+						else
+							temporaryDive(proOwnerID, 45, 40)
+						end
 					end
-				end
+				--end
 			end
 		end
-		return 0
+		Spring.DeleteProjectile(proID)
+		return true
 	end
 end
 

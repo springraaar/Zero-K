@@ -69,6 +69,8 @@ unitDef = {
         setunitsonfire = "1",
         burntime = 90,
 
+        restrict_in_widgets = 1,
+
 		stats_hide_dps = 1, -- one use
 		stats_hide_reload = 1,
 
@@ -99,7 +101,7 @@ unitDef = {
       reloadtime              = 10,
       smokeTrail              = false,
       soundHit                = [[weapon/missile/nalpalm_missile_hit]],
-      soundStart              = [[weapon/missile/tacnuke_launch2]],
+      soundStart              = [[weapon/missile/tacnuke_launch]],
       tolerance               = 4000,
       turnrate                = 18000,
       weaponAcceleration      = 180,

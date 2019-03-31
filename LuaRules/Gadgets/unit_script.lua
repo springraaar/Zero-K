@@ -109,6 +109,8 @@ local co_resume = coroutine.resume
 local co_yield = coroutine.yield
 local co_running = coroutine.running
 
+local debugMode = false
+
 local bit_and = math.bit_and
 local floor = math.floor
 
@@ -253,6 +255,10 @@ end
 local function WakeUp(thread, ...)
 	thread.container = nil
 	local co = thread.thread
+	if debugMode and not co then
+		Spring.Echo("Error in WakeUp", thread.unitID)
+		Spring.Utilities.UnitEcho(thread.unitID, UnitDefs[Spring.GetUnitDefID(thread.unitID)].name)
+	end
 	local good, err = co_resume(co, ...)
 	if (not good) then
 		Spring.Log(section, LOG.ERROR, err)
@@ -396,6 +402,10 @@ end
 
 function Spring.UnitScript.StartThread(fun, ...)
 	local activeUnit = GetActiveUnit()
+	if debugMode and not fun then
+		Spring.Echo("Error in StartThread", activeUnit.unitID)
+		Spring.Utilities.UnitEcho(activeUnit.unitID, UnitDefs[Spring.GetUnitDefID(activeUnit.unitID)].name)
+	end
 	local co = co_create(fun)
 	-- signal_mask is inherited from current thread, if any
 	local thd = co_running() and activeUnit.threads[co_running()]
@@ -546,9 +556,18 @@ local function LoadScript(scriptName, filename)
 	return chunk
 end
 
+local function ToggleScriptDebug(cmd, line, words, player)
+	if not Spring.IsCheatingEnabled() then 
+		return
+	end
+	
+	debugMode = not debugMode
+	Spring.Echo("Script debug mode", debugMode)
+end
 
 function gadget:Initialize()
 	Spring.Log(section, LOG.INFO, string.format("Loading gadget: %-18s  <%s>", ghInfo.name, ghInfo.basename))
+	gadgetHandler:AddChatAction("scriptdebug", ToggleScriptDebug, "Toggles script debug output.")
 
 	-- This initialization code has following properties:
 	--  * all used scripts are loaded => early syntax error detection

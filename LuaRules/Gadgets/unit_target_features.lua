@@ -23,6 +23,7 @@ local spGetUnitWeaponTarget  = Spring.GetUnitWeaponTarget
 local spGetCommandQueue      = Spring.GetCommandQueue
 
 local featureFlag = Game.collisionFlags.noFeatures
+local groundFlag = Game.collisionFlags.noGround
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -36,10 +37,24 @@ local UPDATE_FREQUENCY = 10
 
 local weaponUnits = IterableMap.New()
 local weaponCounts = {}
+local ignoreGroundWeapons = {}
 
 for i = 1, #UnitDefs do
 	local ud = UnitDefs[i]
-	weaponCounts[i] = (ud.weapons and #ud.weapons > 0 and #ud.weapons)
+	local weapons = (ud.weapons and #ud.weapons > 0 and #ud.weapons)
+	if weapons then
+		weaponCounts[i] = weapons
+		local ignoreGround
+		for j = 1, weapons do
+			local weaponDefID = ud.weapons[j].weaponDef
+			local weaponParam = WeaponDefs[weaponDefID].customParams or {}
+			if weaponParam.force_ignore_ground then
+				ignoreGround = ignoreGround or {}
+				ignoreGround[j] = true
+			end
+		end
+		ignoreGroundWeapons[i] = ignoreGround
+	end
 end
 
 --------------------------------------------------------------------------------
@@ -51,11 +66,20 @@ local function WantAttackGround(unitID)
 		return true
 	end
 	
-	local cQueue = spGetCommandQueue(unitID, 1)
-	if not (cQueue and #cQueue > 0) then
+	local cmdID, cp_3
+	if Spring.Utilities.COMPAT_GET_ORDER then
+		local queue = Spring.GetCommandQueue(unitID, 1)
+		if queue and queue[1] then
+			cmdID, cp_3 = queue[1].id, queue[1].params[3]
+		end
+	else
+		cmdID, _, _, _, _, cp_3 = Spring.GetUnitCurrentCommand(unitID)
+	end
+		
+	if not cmdID then
 		return false, true
 	end
-	return (cQueue[1].id == CMD.ATTACK) and (#cQueue[1].params > 2)
+	return (cmdID == CMD.ATTACK) and cp_3
 end
 
 local function UpdateTargets(unitID, unitData)
@@ -66,20 +90,27 @@ local function UpdateTargets(unitID, unitData)
 	end
 	unitData.attackGround = attackGround
 	
-	for i = 1, unitData.weapons do
+	local weapons = unitData.weaponData
+	for i = 1, weapons.count do
 		unitData.oldFlags = unitData.oldFlags or {}
-		unitData.needChange = unitData.needChange or {}
+		unitData.needFeature = unitData.needFeature or {}
 		if not unitData.oldFlags[i] then
 			local state = spGetUnitWeaponState(unitID, i, "avoidFlags")
 			if state then
 				unitData.oldFlags[i] = state
-				unitData.needChange[i] = ((state%(featureFlag*2)) < featureFlag)
+				unitData.needFeature[i] = ((state%(featureFlag*2)) < featureFlag)
+				if weapons.ignoreGround and weapons.ignoreGround[i] then
+					unitData.needGround = unitData.needGround or {}
+					unitData.needGround[i] = ((state%(groundFlag*2)) < groundFlag)
+				end
 			end
 		end
 		
-		if unitData.needChange[i] then
+		local feature = unitData.needFeature[i]
+		local ground = (unitData.needGround and unitData.needGround[i])
+		if feature or ground then
 			if attackGround then
-				spSetUnitWeaponState(unitID, i, "avoidFlags", unitData.oldFlags[i] + featureFlag)
+				spSetUnitWeaponState(unitID, i, "avoidFlags", unitData.oldFlags[i] + ((feature and featureFlag) or 0)  + ((ground and groundFlag) or 0))
 			else
 				spSetUnitWeaponState(unitID, i, "avoidFlags", unitData.oldFlags[i])
 			end
@@ -108,7 +139,10 @@ end
 
 local function AddUnit(unitID, unitDefID)
 	weaponUnits.Add(unitID, {
-		weapons = weaponCounts[unitDefID],
+		weaponData = {
+			count = weaponCounts[unitDefID],
+			ignoreGround = ignoreGroundWeapons[unitDefID],
+		},
 		attackGround = false
 	})
 end

@@ -34,7 +34,7 @@ local goodCommand = {
 	[CMD.MOVE] = true,
 	[CMD_RAW_MOVE] = true,
 	[CMD_RAW_BUILD] = true,
-	[CMD.SET_WANTED_MAX_SPEED] = true,
+	[CMD.SET_WANTED_MAX_SPEED or 70] = true,
 	[CMD.GUARD] = true,
 	[CMD.RECLAIM] = true,
 	[CMD.REPAIR] = true,
@@ -134,6 +134,7 @@ end
 
 local valkMaxMass = UnitDefNames.gunshiptrans.transportMass
 local valkMaxSize = UnitDefNames.gunshiptrans.transportSize * 2
+local REVERSE_COMPAT = not Spring.Utilities.IsCurrentVersionNewerThan(104, 600)
 
 local function DoSelectionLoad()
 	-- Find the units which can transport and the units which are transports
@@ -152,18 +153,26 @@ local function DoSelectionLoad()
 				if ud.isTransport then
 					local transportUnits = Spring.GetUnitIsTransporting(unitID)
 					if transportUnits and #transportUnits == 0 then
-						if ud.transportMass > valkMaxMass then
-							heavyTrans[#heavyTrans + 1] = unitID
-						else
+						if ud.customParams.islighttransport then
 							lightTrans[#lightTrans + 1] = unitID
+						else
+							heavyTrans[#heavyTrans + 1] = unitID
 						end
 					end
 				end
 			else
-				if (ud.mass > valkMaxMass) or (ud.xsize > valkMaxSize) or (ud.zsize > valkMaxSize) then
-					heavy[#heavy + 1] = unitID
+				if REVERSE_COMPAT then
+					if (ud.mass > valkMaxMass) or (ud.xsize > valkMaxSize) or (ud.zsize > valkMaxSize) then
+						heavy[#heavy + 1] = unitID
+					else
+						light[#light + 1] = unitID
+					end
 				else
-					light[#light + 1] = unitID
+					if ud.customParams.requireheavytrans then
+						heavy[#heavy + 1] = unitID
+					else
+						light[#light + 1] = unitID
+					end
 				end
 			end
 		end

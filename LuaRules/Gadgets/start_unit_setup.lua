@@ -60,9 +60,18 @@ local function CheckOrderRemoval() -- FIXME: maybe we can remove polling every f
 		return
 	end
 	for unitID, factoryDefID in pairs(ordersToRemove) do
-		local cQueue = Spring.GetCommandQueue(unitID, 1)
-		if cQueue and cQueue[1] and cQueue[1].id == -factoryDefID then
-			Spring.GiveOrderToUnit(unitID, CMD.REMOVE, {cQueue[1].tag}, CMD.OPT_ALT)
+		local cmdID, cmdTag
+		if Spring.Utilities.COMPAT_GET_ORDER then
+			local queue = Spring.GetCommandQueue(unitID, 1)
+			if queue and queue[1] then
+				cmdID, cmdTag = queue[1].id, queue[1].tag
+			end
+		else
+			cmdID, _, cmdTag = Spring.GetUnitCurrentCommand(unitID)
+		end
+		
+		if cmdID == -factoryDefID then
+			Spring.GiveOrderToUnit(unitID, CMD.REMOVE, {cmdTag}, CMD.OPT_ALT)
 		end
 	end
 	ordersToRemove = nil
@@ -307,7 +316,10 @@ local function GetStartPos(teamID, teamInfo, isAI)
 end
 
 local function SpawnStartUnit(teamID, playerID, isAI, bonusSpawn, notAtTheStartOfTheGame)
-	local teamInfo = teamID and select(7, Spring.GetTeamInfo(teamID))
+	if not teamID then
+		return
+	end
+	local _,_,_,_,_,allyTeamID,teamInfo = Spring.GetTeamInfo(teamID)
 	if teamInfo and teamInfo.nocommander then
 		waitingForComm[teamID] = nil
 		return
@@ -392,6 +404,10 @@ local function SpawnStartUnit(teamID, playerID, isAI, bonusSpawn, notAtTheStartO
 
 		Spring.SetTeamResource(teamID, "energy", teamInfo.start_energy or (START_ENERGY + energy))
 		Spring.SetTeamResource(teamID, "metal", teamInfo.start_metal or (START_METAL + metal))
+
+		if GG.Overdrive then
+			GG.Overdrive.AddInnateIncome(allyTeamID, INNATE_INC_METAL, INNATE_INC_ENERGY)
+		end
 
 		if (udef.customParams.level and udef.name ~= "chickenbroodqueen") and 
 			((not campaignBattleID) or GG.GalaxyCampaignHandler.HasFactoryPlop(teamID)) then
@@ -670,7 +686,7 @@ function gadget:Shutdown()
 end
 
 function gadget:Load(zip)
-	if not GG.SaveLoad then
+	if not (GG.SaveLoad and GG.SaveLoad.ReadFile) then
 		Spring.Log(gadget:GetInfo().name, LOG.ERROR, "Start Unit Setup failed to access save/load API")
 		return
 	end

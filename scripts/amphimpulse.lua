@@ -359,7 +359,7 @@ function script.Create()
 	TANK_MAX = UnitDefs[Spring.GetUnitDefID(unitID)].customParams.maxwatertank
 	--StartThread(Walk)
 
-	StartThread(SmokeUnit, smokePiece)	
+	StartThread(GG.Script.SmokeUnit, smokePiece)	
 end
 
 local function RestoreAfterDelay()
@@ -396,108 +396,53 @@ function script.QueryWeapon(num)
 	return firepoints[gun_1]
 end
 
-function script.FireWeapon(num)
-	soundIndex = soundIndex - 1
-	if soundIndex <= 0 then
-		local proportion = 0
-		local waterTank = Spring.GetUnitRulesParam(unitID,"watertank")
-		if waterTank then
-			proportion = waterTank/TANK_MAX
-		end
-		soundIndex = math.floor(math.random()+1.5)
-		local px, py, pz = Spring.GetUnitPosition(unitID)
-		Spring.PlaySoundFile("sounds/weapon/watershort.wav", 20+proportion*5, px, py, pz)
-	end
-	
-	-- Add Impulse
-	local projectiles = spGetUnitRulesParam(unitID, "water_projectiles") or 8
-
-	local ax, ay, az = Spring.GetUnitPiecePosDir(unitID, forwards)
-	local _,_,_,ux, uy, uz = Spring.GetUnitPosition(unitID, true)
-	local x,y,z = (ux-ax), (uy-ay), (uz-az)
-	
-	local magnitude = impulse
-	
-	local depth = spGetGroundHeight(ux,uz)
-	if depth < 0 then
-		if depth < impulseMaxDepth then
-			depth = impulseMaxDepth
-		end
-		magnitude = magnitude + depth*impulseDepthMult
-	end
-	
-	--if depth < -30 then
-	--	GG.AddGadgetImpulse(unitID, x, y, z, 30*projectiles, true, false, true, false, unitDefID) 
-	--end
-	-- Change Tank
-	GG.shotWaterWeapon(unitID)
-end
-
 function script.Shot(num)
 	GG.Floating_AimWeapon(unitID)
-	if math.random() < 0.2 then
-		EmitSfx(firepoints[gun_1], 1024)
-	end
-	--[[
-	local waterTank = Spring.GetUnitRulesParam(unitID,"watertank")
-	if waterTank then
-		local proportion = waterTank/TANK_MAX
-		if proportion > 0.4 then
-			EmitSfx(firepoints[gun_1], 1024)
-			if math.random() < (proportion-0.4)/0.6 then
-				EmitSfx(firepoints[gun_1], 1024)
-			end
-		else
-			if math.random() < (proportion + 0.2)/0.6 then
-				EmitSfx(firepoints[gun_1], 1024)
-			end
-		end
-	end--]]
-	--Spring.Echo(Spring.GetGameFrame())
+	EmitSfx(firepoints[gun_1], 1024)
 	gun_1 = 1 - gun_1
 end
 
 function script.Killed(recentDamage, maxHealth)
 	local severity = recentDamage/maxHealth
 	if severity <= .25 then
-		Explode(lfoot, sfxNone)
-		Explode(lcalf, sfxNone)
-		Explode(lthigh, sfxNone)
-		Explode(pelvis, sfxNone)
-		Explode(rfoot, sfxNone)
-		Explode(rcalf, sfxNone)
-		Explode(rthigh, sfxNone)
-		Explode(torso, sfxNone)
+		Explode(lfoot, SFX.NONE)
+		Explode(lcalf, SFX.NONE)
+		Explode(lthigh, SFX.NONE)
+		Explode(pelvis, SFX.NONE)
+		Explode(rfoot, SFX.NONE)
+		Explode(rcalf, SFX.NONE)
+		Explode(rthigh, SFX.NONE)
+		Explode(torso, SFX.NONE)
 		return 1
 	elseif severity <= .50 then
-		Explode(lfoot, sfxFall)
-		Explode(lcalf, sfxFall)
-		Explode(lthigh, sfxFall)
-		Explode(pelvis, sfxFall)
-		Explode(rfoot, sfxFall)
-		Explode(rcalf, sfxFall)
-		Explode(rthigh, sfxFall)
-		Explode(torso, sfxShatter)
+		Explode(lfoot, SFX.FALL)
+		Explode(lcalf, SFX.FALL)
+		Explode(lthigh, SFX.FALL)
+		Explode(pelvis, SFX.FALL)
+		Explode(rfoot, SFX.FALL)
+		Explode(rcalf, SFX.FALL)
+		Explode(rthigh, SFX.FALL)
+		Explode(torso, SFX.SHATTER)
 		return 1
 	elseif severity <= .99 then
-		Explode(lfoot, sfxFall + sfxSmoke + sfxFire + sfxExplode)
-		Explode(lcalf, sfxFall + sfxSmoke + sfxFire + sfxExplode)
-		Explode(lthigh, sfxFall + sfxSmoke + sfxFire + sfxExplode)
-		Explode(pelvis, sfxFall + sfxSmoke + sfxFire + sfxExplode)
-		Explode(rfoot, sfxFall + sfxSmoke + sfxFire + sfxExplode)
-		Explode(rcalf, sfxFall + sfxSmoke + sfxFire + sfxExplode)
-		Explode(rthigh, sfxFall + sfxSmoke + sfxFire + sfxExplode)
-		Explode(torso, sfxShatter)
+		Explode(lfoot, SFX.FALL + SFX.SMOKE + SFX.FIRE + SFX.EXPLODE)
+		Explode(lcalf, SFX.FALL + SFX.SMOKE + SFX.FIRE + SFX.EXPLODE)
+		Explode(lthigh, SFX.FALL + SFX.SMOKE + SFX.FIRE + SFX.EXPLODE)
+		Explode(pelvis, SFX.FALL + SFX.SMOKE + SFX.FIRE + SFX.EXPLODE)
+		Explode(rfoot, SFX.FALL + SFX.SMOKE + SFX.FIRE + SFX.EXPLODE)
+		Explode(rcalf, SFX.FALL + SFX.SMOKE + SFX.FIRE + SFX.EXPLODE)
+		Explode(rthigh, SFX.FALL + SFX.SMOKE + SFX.FIRE + SFX.EXPLODE)
+		Explode(torso, SFX.SHATTER)
 		return 2
 	else
-		Explode(lfoot, sfxFall + sfxSmoke + sfxFire + sfxExplode)
-		Explode(lcalf, sfxFall + sfxSmoke + sfxFire + sfxExplode)
-		Explode(lthigh, sfxFall + sfxSmoke + sfxFire + sfxExplode)
-		Explode(pelvis, sfxFall + sfxSmoke + sfxFire + sfxExplode)
-		Explode(rfoot, sfxFall + sfxSmoke + sfxFire + sfxExplode)
-		Explode(rcalf, sfxFall + sfxSmoke + sfxFire + sfxExplode)
-		Explode(rthigh, sfxFall + sfxSmoke + sfxFire + sfxExplode)
-		Explode(torso, sfxShatter + sfxExplode)
+		Explode(lfoot, SFX.FALL + SFX.SMOKE + SFX.FIRE + SFX.EXPLODE)
+		Explode(lcalf, SFX.FALL + SFX.SMOKE + SFX.FIRE + SFX.EXPLODE)
+		Explode(lthigh, SFX.FALL + SFX.SMOKE + SFX.FIRE + SFX.EXPLODE)
+		Explode(pelvis, SFX.FALL + SFX.SMOKE + SFX.FIRE + SFX.EXPLODE)
+		Explode(rfoot, SFX.FALL + SFX.SMOKE + SFX.FIRE + SFX.EXPLODE)
+		Explode(rcalf, SFX.FALL + SFX.SMOKE + SFX.FIRE + SFX.EXPLODE)
+		Explode(rthigh, SFX.FALL + SFX.SMOKE + SFX.FIRE + SFX.EXPLODE)
+		Explode(torso, SFX.SHATTER + SFX.EXPLODE)
 		return 2
 	end
 end

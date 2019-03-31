@@ -5,7 +5,7 @@ unitDef = {
   acceleration        = 0.066,
   activateWhenBuilt   = true,
   brakeRate           = 1.5,
-  buildCostMetal      = 150,
+  buildCostMetal      = 130,
   buildDistance       = 160,
   builder             = true,
 
@@ -23,7 +23,7 @@ unitDef = {
   corpse              = [[DEAD]],
 
   customParams        = {
-	modelradius    = [[15]],
+    modelradius    = [[25]],
   },
 
   energyUse           = 0,

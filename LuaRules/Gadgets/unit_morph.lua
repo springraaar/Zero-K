@@ -436,7 +436,7 @@ local function FinishMorph(unitID, morphData)
 	--//copy command queue
 	local cmds = Spring.GetCommandQueue(unitID, -1)
 
-	local states = Spring.GetUnitStates(unitID)
+	local states = Spring.GetUnitStates(unitID) -- This can be left in table-state mode until REVERSE_COMPAT is not an issue.
 	states.retreat = Spring.GetUnitRulesParam(unitID, "retreatState") or 0
 	states.buildPrio = Spring.GetUnitRulesParam(unitID, "buildpriority") or 1
 	states.miscPrio = Spring.GetUnitRulesParam(unitID, "miscpriority") or 1
@@ -892,7 +892,7 @@ function gadget:CommandFallback(unitID, unitDefID, teamID, cmdID, cmdParams, cmd
 end
 
 function gadget:Load(zip)
-	if not GG.SaveLoad then
+	if not (GG.SaveLoad and GG.SaveLoad.ReadFile) then
 		Spring.Log(gadget:GetInfo().name, LOG.ERROR, "Failed to access save/load API")
 		return
 	end

@@ -16,9 +16,9 @@ local HOVER_HEIGHT = 2600
 
 local AIM_RADIUS = 160
 
--- 5 minutes and 50 seconds to reach capacity.
-local SPAWN_PERIOD = 700 -- in milliseconds
-local METEOR_CAPACITY = 500 
+-- 6 minutes to reach capacity.
+local SPAWN_PERIOD = 1200 -- in milliseconds
+local METEOR_CAPACITY = 300
 
 local fireRange = WeaponDefNames["zenith_meteor"].range
 
@@ -208,7 +208,7 @@ end
 local function LaunchAll(x, z)
 	-- Sanitize input
 	x, z = Spring.Utilities.ClampPosition(x, z)
-	local y = math.min(0, Spring.GetGroundHeight(x,z))
+	local y = math.max(0, Spring.GetGroundHeight(x,z))
 	
 	if Vector.AbsVal(ux - x, uz - z) > fireRange then
 		return
@@ -292,7 +292,7 @@ function script.Create()
 	Move(firept, y_axis, 9001)
 	Move(flare, y_axis, -110)
 	Turn(flare, x_axis, math.rad(-90))
-	StartThread(SmokeUnit, smokePiece)
+	StartThread(GG.Script.SmokeUnit, smokePiece)
 	StartThread(SpawnProjectileThread)
 	
 	-- Helpful for devving
@@ -358,10 +358,10 @@ function script.Killed(recentDamage, maxHealth)
 	LoseControlOfMeteors();
 	local severity = recentDamage/maxHealth
 	if severity < 0.5 then
-		Explode(base, sfxNone)
+		Explode(base, SFX.NONE)
 		return 1
 	else
-		Explode(base, sfxShatter)
+		Explode(base, SFX.SHATTER)
 		return 2
 	end
 end

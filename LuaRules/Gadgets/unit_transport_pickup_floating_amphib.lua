@@ -29,7 +29,6 @@ local spGetCommandQueue = Spring.GetCommandQueue
 local spGetUnitPosition = Spring.GetUnitPosition
 local spGetGroundHeight = Spring.GetGroundHeight
 local spGetUnitAllyTeam = Spring.GetUnitAllyTeam
-local spGetUnitStates = Spring.GetUnitStates
 local spGetUnitIsTransporting = Spring.GetUnitIsTransporting
 local spGetUnitsInCylinder = Spring.GetUnitsInCylinder
 local spGiveOrderArrayToUnitArray = Spring.GiveOrderArrayToUnitArray
@@ -114,8 +113,8 @@ local function IsUnitAllied(unitID1,unitID2)
 end
 
 local function IsUnitIdle(unitID)
-	local cQueue = spGetCommandQueue(unitID, 1)
-	local moving = cQueue and #cQueue > 0 and sinkCommand[cQueue[1].id]
+	local cmdID = Spring.Utilities.GetUnitFirstCommand(unitID)
+	local moving = cmdID and sinkCommand[cmdID]
 	return not moving
 end
 
@@ -242,7 +241,7 @@ function gadget:CommandFallback(unitID, unitDefID, unitTeam, cmdID, cmdParams, c
 			if y >= -20 then --unit is above water
 				--"PHASE B"--
 				--Spring.Echo("B")
-				local isRepeat = spGetUnitStates(unitID)["repeat"]
+				local isRepeat = Spring.Utilities.GetUnitRepeat(unitID)
 				local options = isRepeat and CMD.OPT_INTERNAL or CMD.OPT_SHIFT 
 				transportPhase[unitID] = "INTERNAL_LOAD_UNITS " .. cargoID
 				giveLOAD_order[#giveLOAD_order+1] = {unitID,CMD.INSERT,{1,CMD.LOAD_UNITS,options,cargoID}, CMD.OPT_ALT}
@@ -274,7 +273,7 @@ function gadget:CommandFallback(unitID, unitDefID, unitTeam, cmdID, cmdParams, c
 				transportPhase[unitID] = "ALREADY_CALL_UNIT_ONCE"
 			end
 			if haveFloater then
-				local isRepeat = spGetUnitStates(unitID)["repeat"]
+				local isRepeat = Spring.Utilities.GetUnitRepeat(unitID)
 				local options = isRepeat and CMD.OPT_INTERNAL or CMD.OPT_SHIFT 
 				transportPhase[unitID] = "INTERNAL_LOAD_UNITS " .. cmdParams[1]+cmdParams[3]
 				giveLOAD_order[#giveLOAD_order+1] = {unitID,CMD.INSERT,{1,CMD.LOAD_UNITS,options,unpack(cmdParams)}, CMD.OPT_ALT}
@@ -284,7 +283,7 @@ function gadget:CommandFallback(unitID, unitDefID, unitTeam, cmdID, cmdParams, c
 			return true,false --hold this command
 		end
 		return true,true --remove this command
-	elseif cmdID == CMD_EXTENDED_UNLOAD then
+	elseif cmdID == CMD_EXTENDED_UNLOAD and cmdParams and cmdParams[3] then
 		if (transportPhase[unitID] and transportPhase[unitID]== "INTERNAL_UNLOAD_UNITS") then
 			return true,true --remove this command
 		end
@@ -329,9 +328,9 @@ function gadget:GameFrame(f)
 						haveFloater = true
 					end
 				end
-				local cmd=spGetCommandQueue(transportID,1)
-				if cmd and cmd[1] then					
-					if cmd[1]['id'] == CMD.LOAD_UNITS and haveFloater then
+				local cmdID = Spring.Utilities.GetUnitFirstCommand(transportID)
+				if cmdID then
+					if cmdID == CMD.LOAD_UNITS and haveFloater then
 						i = i + 1 --go to next entry
 					else
 						-- delete current entry, replace it with final entry, and loop again
@@ -354,7 +353,7 @@ function gadget:GameFrame(f)
 		for i = 1, #giveLOAD_order do
 			local order = giveLOAD_order[i]
 			local transportID = order[1]
-			if transportPhase[transportID] == "INTERNAL_LOAD_UNITS " .. order[3][4] + (order[3][6] or 0) then
+			if Spring.ValidUnitID(transportID) and transportPhase[transportID] == "INTERNAL_LOAD_UNITS " .. order[3][4] + (order[3][6] or 0) then
 				spGiveOrderToUnit(unpack(order))
 				local transporteeList
 				if not order[3][5] then
@@ -362,12 +361,12 @@ function gadget:GameFrame(f)
 				else
 					transporteeList = spGetUnitsInCylinder(order[3][4],order[3][6],order[3][7])
 				end
-				transportPhase[transportID] = nil --clear a blocking tag
 				maintainFloatCount = maintainFloatCount + 1
 				maintainFloat[maintainFloatCount] = {transportID,transporteeList}
 				--Spring.Echo("C")
 				--"PHASE C"--
 			end
+			transportPhase[transportID] = nil --clear a blocking tag
 		end
 		giveLOAD_order = {}
 	end

@@ -22,40 +22,6 @@
 local HANDLER_BASENAME = "gadgets.lua"
 local isMission = VFS.FileExists("mission.lua")	-- or Game.gameName:find("Scenario Editor")
 
-local DepthMod = 10
-local DepthValue = -1
-
-origPairs = pairs
-local whiteList = {['string'] = true, ['number'] = true, ['boolean'] = true, ['nil'] = true, ['thread'] = true}
-local function mynext(...)
-	local i,v = next(...)
-	local t = type(i)
-	if not whiteList[t] then
-		Spring.Log(HANDLER_BASENAME, "error", '*** A gadget is misusing pairs! Report this with full infolog.txt! ***')
-		Spring.Log(HANDLER_BASENAME, "error", t)
-		Spring.Log(HANDLER_BASENAME, "error", i)
-		Spring.Log(HANDLER_BASENAME, "error", v)
-		DepthValue = DepthValue + 1
-		if isMission then
-			Spring.Log(HANDLER_BASENAME, "error", "Error depth: " .. DepthValue%DepthMod + 1, DepthValue%DepthMod + 1)
-		else
-			error("Error depth: " .. DepthValue%DepthMod + 1, DepthValue%DepthMod + 1)	-- breaks mission_runner
-		end
-	end
-	return i,v
-end
-
-pairs = function(...) 
-	if SendToUnsynced then
-		local n,s,i = origPairs(...)
-		return mynext,s,i
-	else
-		local n,s,i = origPairs(...)
-		return next,s,i
-	end
-end
-
-
 local HANDLER_DIR = 'LuaGadgets/'
 local GADGETS_DIR = Script.GetName():gsub('US$', '') .. '/Gadgets/'
 local SCRIPT_DIR = Script.GetName() .. '/'
@@ -183,8 +149,11 @@ local callInLists = {
 	"AllowUnitTransfer",
 	"AllowUnitBuildStep",
 	"AllowUnitTransport",
+	"AllowUnitTransportLoad",
+	"AllowUnitTransportUnload",
 	"AllowUnitCloak",
 	"AllowUnitDecloak",
+	"AllowUnitTargetRange",
 	"AllowFeatureBuildStep",
 	"AllowFeatureCreation",
 	"AllowResourceLevel",
@@ -1196,20 +1165,54 @@ function gadgetHandler:AllowUnitBuildStep(builderID, builderTeam,
   return true
 end
 
-
 function gadgetHandler:AllowUnitTransport(
   transporterID, transporterUnitDefID, transporterTeam,
   transporteeID, transporteeUnitDefID, transporteeTeam
 )
   for _,g in ipairs(self.AllowUnitTransportList) do
-    if (not g:AllowUnitTransport(transporterID, transporterUnitDefID, transporterTeam,
-                                 transporteeID, transporteeUnitDefID, transporteeTeam)) then
+    if (not g:AllowUnitTransport(
+      transporterID, transporterUnitDefID, transporterTeam,
+      transporteeID, transporteeUnitDefID, transporteeTeam
+    )) then
       return false
     end
   end
   return true
 end
 
+function gadgetHandler:AllowUnitTransportLoad(
+  transporterID, transporterUnitDefID, transporterTeam,
+  transporteeID, transporteeUnitDefID, transporteeTeam,
+  loadPosX, loadPosY, loadPosZ
+)
+  for _,g in ipairs(self.AllowUnitTransportLoadList) do
+    if (not g:AllowUnitTransportLoad(
+      transporterID, transporterUnitDefID, transporterTeam,
+      transporteeID, transporteeUnitDefID, transporteeTeam,
+      loadPosX, loadPosY, loadPosZ
+    )) then
+      return false
+    end
+  end
+  return true
+end
+
+function gadgetHandler:AllowUnitTransportUnload(
+  transporterID, transporterUnitDefID, transporterTeam,
+  transporteeID, transporteeUnitDefID, transporteeTeam,
+  unloadPosX, unloadPosY, unloadPosZ
+)
+  for _,g in ipairs(self.AllowUnitTransportUnloadList) do
+    if (not g:AllowUnitTransportUnload(
+      transporterID, transporterUnitDefID, transporterTeam,
+      transporteeID, transporteeUnitDefID, transporteeTeam,
+      unloadPosX, unloadPosY, unloadPosZ
+    )) then
+      return false
+    end
+  end
+  return true
+end
 
 function gadgetHandler:AllowUnitCloak(unitID, enemyID)
   -- The case can be that unitID == enemyID. This is for engine stunned unitID, they are their own enemies.
@@ -1330,12 +1333,34 @@ function gadgetHandler:AllowWeaponTargetCheck(attackerID, attackerWeaponNum, att
 	return true
 end
 
+-- AllowWeaponTarget is also called when auto-generating CAI attack commands.
+-- When targetID=-1 and weaponNum=-1 targetPriority determines the target search
+-- radius; targetPriority=nil accompanies any actual
+
 function gadgetHandler:AllowWeaponTarget(attackerID, targetID, attackerWeaponNum, attackerWeaponDefID, defPriority)
 	local allowed = true
-	local priority = defPriority
+	local returnValue
+	
+	if targetID == -1 then
+		local unitID = attackerID
+		local aquireRange = defPriority
+		for _, g in ipairs(self.AllowUnitTargetRangeList) do
+			-- Send priority to each successive gadget.
+			local targetAllowed, newRange = g:AllowUnitTargetRange(unitID, aquireRange)
 
+			if (not targetAllowed) then
+				allowed = false
+				break
+			end
+
+			aquireRange = newRange
+		end
+		return true, aquireRange
+	end
+	
+	local priority = defPriority
 	for _, g in ipairs(self.AllowWeaponTargetList) do
-		-- Send priority to each sucessive gadget.
+		-- Send priority to each successive gadget.
 		local targetAllowed, targetPriority = g:AllowWeaponTarget(attackerID, targetID, attackerWeaponNum, attackerWeaponDefID, priority)
 
 		if (not targetAllowed) then
@@ -1345,7 +1370,6 @@ function gadgetHandler:AllowWeaponTarget(attackerID, targetID, attackerWeaponNum
 
 		priority = targetPriority
 	end
-
 	return allowed, priority
 end
 

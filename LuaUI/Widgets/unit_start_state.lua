@@ -129,7 +129,6 @@ options = {
 		name = "Inherit Factory Control Group", 
 		type = 'bool', 
 		value = false, 
-		noHotkey = true,
 		path = "Settings/Interface/Control Groups",
 	},
 
@@ -151,7 +150,6 @@ options = {
 				end
 			end
 		end,
-		noHotkey = true,
 	},
 
 	holdPosition = {
@@ -170,7 +168,6 @@ options = {
 				end
 			end
 		end,
-		noHotkey = true,
 	},
 
 	skirmHoldPosition = {
@@ -189,7 +186,6 @@ options = {
 				end
 			end
 		end,
-		noHotkey = true,
 	},
 
 	artyHoldPosition = {
@@ -208,7 +204,6 @@ options = {
 				end
 			end
 		end,
-		noHotkey = true,
 	},
 
 	aaHoldPosition = {
@@ -227,7 +222,6 @@ options = {
 				end
 			end
 		end,
-		noHotkey = true,
 	},
 
 	categorieslabel = {name = "presetlabel", type = 'label', value = "Categories", path = options_path},
@@ -248,7 +242,6 @@ options = {
 				end
 			end
 		end,
-		noHotkey = true,
 	},
 
 	enableTacticalAI = {
@@ -267,7 +260,6 @@ options = {
 				end
 			end
 		end,
-		noHotkey = true,
 	},
 	
 	enableAutoAssist = {
@@ -286,7 +278,6 @@ options = {
 				end
 			end
 		end,
-		noHotkey = true,
 	},
 	disableAutoAssist = {
 		type = 'button',
@@ -304,7 +295,6 @@ options = {
 				end
 			end
 		end,
-		noHotkey = true,
 	},
 	
 	enableAutoCallTransport = {
@@ -327,7 +317,6 @@ options = {
 				end
 			end
 		end,
-		noHotkey = true,
 	},
 	disableAutoCallTransport = {
 		type = 'button',
@@ -349,7 +338,6 @@ options = {
 				end
 			end
 		end,
-		noHotkey = true,
 	},
 	setRanksToDefault = {
 		type = 'button',
@@ -368,7 +356,6 @@ options = {
 				end
 			end
 		end,
-		noHotkey = true,
 	},
 	setRanksToThree = {
 		type = 'button',
@@ -385,7 +372,6 @@ options = {
 				end
 			end
 		end,
-		noHotkey = true,
 	},
 	
 	commander_label = {
@@ -583,14 +569,13 @@ local function addUnit(defName, path)
 		options_order[#options_order+1] = defName .. "_flylandstate_1_factory"
 	end
 
-	if ud.isFactory then
+	if ud.isFactory or ud.customParams.isfakefactory then
 		options[defName .. "_repeat"] = {
 			name = "  Repeat",
 			desc = "Repeat construction queue.",
 			type = 'bool',
 			value = false,
 			path = path,
-			noHotkey = true,
 		}
 		options_order[#options_order+1] = defName .. "_repeat"
 	end
@@ -602,7 +587,6 @@ local function addUnit(defName, path)
 			type = 'bool',
 			value = false,
 			path = path,
-			noHotkey = true,
 		}
 		options_order[#options_order+1] = defName .. "_auto_assist"
 	end
@@ -614,7 +598,6 @@ local function addUnit(defName, path)
 			type = 'bool',
 			value = ud.customParams.airstrafecontrol == "1",
 			path = path,
-			noHotkey = true,
 		}
 		options_order[#options_order+1] = defName .. "_airstrafe1"
 	end
@@ -744,7 +727,6 @@ local function addUnit(defName, path)
 			type = 'bool',
 			value = tacticalAIUnits[defName].value,
 			path = path,
-			noHotkey = true,
 		}
 		options_order[#options_order+1] = defName .. "_tactical_ai_2"
 	end
@@ -756,7 +738,6 @@ local function addUnit(defName, path)
 			type = 'bool',
 			value = ud.metalCost < 200, -- Automatically enabled for light transports.
 			path = path,
-			noHotkey = true,
 		}
 		options_order[#options_order+1] = defName .. "_tactical_ai_transport"
 	end
@@ -768,7 +749,6 @@ local function addUnit(defName, path)
 			type = 'bool',
 			value = dontFireAtRadarUnits[ud.id],
 			path = path,
-			noHotkey = true,
 		}
 		options_order[#options_order+1] = defName .. "_fire_at_radar"
 	end
@@ -780,7 +760,6 @@ local function addUnit(defName, path)
 			type = 'bool',
 			value = ud.customParams.initcloaked,
 			path = path,
-			noHotkey = true,
 		}
 		options_order[#options_order+1] = defName .. "_personal_cloak_0"
 	end
@@ -793,7 +772,6 @@ local function addUnit(defName, path)
 				type = 'bool',
 				value = true,
 				path = path,
-				noHotkey = true,
 			}
 			options_order[#options_order+1] = defName .. "_impulseMode"
 		else
@@ -803,7 +781,6 @@ local function addUnit(defName, path)
 				type = 'bool',
 				value = ud.activateWhenBuilt,
 				path = path,
-				noHotkey = true,
 			}
 			options_order[#options_order+1] = defName .. "_activateWhenBuilt"
 		end
@@ -961,12 +938,11 @@ function widget:UnitCreated(unitID, unitDefID, unitTeam, builderID)
 
 		orderArray[1] = {CMD.FIRE_STATE, {options.commander_firestate0.value}, CMD.OPT_SHIFT}
 		orderArray[2] = {CMD.MOVE_STATE, {options.commander_movestate1.value}, CMD.OPT_SHIFT}
+		orderArray[3] = {CMD_RETREAT, {options.commander_retreat.value}, CMD.OPT_SHIFT + (options.commander_retreat.value == 0 and CMD.OPT_RIGHT or 0)}
 		if WG.SetAutoCallTransportState and options.commander_auto_call_transport_2.value == 1 then
 			WG.SetAutoCallTransportState(unitID, unitDefID, true)
 		end
-		if WG['retreat'] then
-			WG['retreat'].addRetreatCommand(unitID, unitDefID, options.commander_retreat.value)
-		end
+
 		if options.commander_selection_rank and WG.SetSelectionRank then
 			WG.SetSelectionRank(unitID, options.commander_selection_rank.value)
 		end
@@ -981,7 +957,7 @@ function widget:UnitCreated(unitID, unitDefID, unitTeam, builderID)
 				if builderID then
 					local bdid = Spring.GetUnitDefID(builderID)
 					if UnitDefs[bdid] and UnitDefs[bdid].isFactory then
-						local firestate = Spring.GetUnitStates(builderID).firestate
+						local firestate = Spring.Utilities.GetUnitFireState(builderID)
 						if firestate then
 							orderArray[#orderArray + 1] = {CMD.FIRE_STATE, {firestate}, CMD.OPT_SHIFT}
 							trueBuilder = true
@@ -1006,7 +982,7 @@ function widget:UnitCreated(unitID, unitDefID, unitTeam, builderID)
 				if builderID then
 					local bdid = Spring.GetUnitDefID(builderID)
 					if UnitDefs[bdid] and UnitDefs[bdid].isFactory then
-						local movestate = Spring.GetUnitStates(builderID).movestate
+						local movestate = Spring.Utilities.GetUnitMoveState(builderID)
 						if movestate then
 							orderArray[#orderArray + 1] = {CMD.MOVE_STATE, {movestate}, CMD.OPT_SHIFT}
 							trueBuilder = true

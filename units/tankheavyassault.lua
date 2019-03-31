@@ -25,7 +25,7 @@ unitDef = {
   leaveTracks         = true,
   maxDamage           = 12000,
   maxSlope            = 18,
-  maxVelocity         = 2.05,
+  maxVelocity         = 1.9,
   maxWaterDepth       = 22,
   minCloakDistance    = 75,
   movementClass       = [[TANK4]],
@@ -80,6 +80,7 @@ unitDef = {
 	    gatherradius = [[105]],
 	    smoothradius = [[70]],
 	    smoothmult   = [[0.4]],
+		force_ignore_ground = [[1]],
 		
 		light_color = [[3 2.33 1.5]],
 		light_radius = 150,
@@ -101,7 +102,7 @@ unitDef = {
       soundStart              = [[weapon/cannon/rhino]],
       turret                  = true,
       weaponType              = [[Cannon]],
-      weaponVelocity          = 310,
+      weaponVelocity          = 270,
     },
 	
 	SLOWBEAM = {
@@ -125,7 +126,7 @@ unitDef = {
       },
 
       damage                  = {
-        default = 600,
+        default = 2000,
       },
 
       explosionGenerator      = [[custom:flashslow]],
@@ -139,7 +140,7 @@ unitDef = {
       minIntensity            = 1,
       noSelfDamage            = true,
       range                   = 440,
-      reloadtime              = 1,
+      reloadtime              = 2.5,
       rgbColor                = [[0.27 0 0.36]],
       soundStart              = [[weapon/laser/pulse_laser2]],
       soundStartVolume        = 15,

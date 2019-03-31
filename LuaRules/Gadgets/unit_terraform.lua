@@ -30,15 +30,15 @@ if gadgetHandler:IsSyncedCode() then
 local USE_TERRAIN_TEXTURE_CHANGE = true -- (Spring.GetModOptions() or {}).terratex == "1"
 
 -- Speedups
-local cos             		= math.cos
-local floor           		= math.floor
-local abs             		= math.abs
-local pi             		= math.pi
-local ceil 			  		= math.ceil
-local sqrt 					= math.sqrt
-local pow					= math.pow
-local random 		  		= math.random
-local max					= math.max
+local cos                   = math.cos
+local floor                 = math.floor
+local abs                   = math.abs
+local pi                    = math.pi
+local ceil                  = math.ceil
+local sqrt                  = math.sqrt
+local pow                   = math.pow
+local random                = math.random
+local max                   = math.max
 
 local spAdjustHeightMap     = Spring.AdjustHeightMap
 local spGetGroundHeight     = Spring.GetGroundHeight
@@ -48,8 +48,8 @@ local spLevelHeightMap      = Spring.LevelHeightMap
 local spGetUnitBuildFacing  = Spring.GetUnitBuildFacing
 local spGetCommandQueue     = Spring.GetCommandQueue
 local spValidUnitID         = Spring.ValidUnitID
-local spGetGameFrame		= Spring.GetGameFrame
-local spGiveOrderToUnit		= Spring.GiveOrderToUnit
+local spGetGameFrame        = Spring.GetGameFrame
+local spGiveOrderToUnit     = Spring.GiveOrderToUnit
 local spInsertUnitCmdDesc   = Spring.InsertUnitCmdDesc
 local spTestBuildOrder      = Spring.TestBuildOrder
 local spSetHeightMap        = Spring.SetHeightMap
@@ -57,25 +57,25 @@ local spSetHeightMapFunc    = Spring.SetHeightMapFunc
 local spRevertHeightMap     = Spring.RevertHeightMap
 local spEditUnitCmdDesc     = Spring.EditUnitCmdDesc
 local spFindUnitCmdDesc     = Spring.FindUnitCmdDesc
-local spGetActiveCommand	= Spring.GetActiveCommand
-local spSpawnCEG     		= Spring.SpawnCEG
-local spCreateUnit			= Spring.CreateUnit
-local spDestroyUnit			= Spring.DestroyUnit
-local spGetAllyTeamList		= Spring.GetAllyTeamList
-local spSetUnitLosMask		= Spring.SetUnitLosMask
-local spGetTeamInfo			= Spring.GetTeamInfo
-local spGetUnitHealth		= Spring.GetUnitHealth 
-local spSetUnitHealth		= Spring.SetUnitHealth
-local spGetCommandQueue 	= Spring.GetCommandQueue
-local spGetUnitTeam		= Spring.GetUnitTeam	
-local spGetUnitAllyTeam		= Spring.GetUnitAllyTeam	
-local spAddHeightMap		= Spring.AddHeightMap	
-local spGetUnitPosition		= Spring.GetUnitPosition	
-local spSetUnitPosition		= Spring.SetUnitPosition	
-local spSetUnitSensorRadius	= Spring.SetUnitSensorRadius
-local spGetAllUnits			= Spring.GetAllUnits
+local spGetActiveCommand    = Spring.GetActiveCommand
+local spSpawnCEG            = Spring.SpawnCEG
+local spCreateUnit          = Spring.CreateUnit
+local spDestroyUnit         = Spring.DestroyUnit
+local spGetAllyTeamList     = Spring.GetAllyTeamList
+local spSetUnitLosMask      = Spring.SetUnitLosMask
+local spGetTeamInfo         = Spring.GetTeamInfo
+local spGetUnitHealth       = Spring.GetUnitHealth
+local spSetUnitHealth       = Spring.SetUnitHealth
+local spGetCommandQueue     = Spring.GetCommandQueue
+local spGetUnitTeam         = Spring.GetUnitTeam
+local spGetUnitAllyTeam     = Spring.GetUnitAllyTeam
+local spAddHeightMap        = Spring.AddHeightMap
+local spGetUnitPosition     = Spring.GetUnitPosition
+local spSetUnitPosition     = Spring.SetUnitPosition
+local spSetUnitSensorRadius = Spring.SetUnitSensorRadius
+local spGetAllUnits         = Spring.GetAllUnits
 local spGetUnitIsDead       = Spring.GetUnitIsDead
-local spSetUnitRulesParam	= Spring.SetUnitRulesParam
+local spSetUnitRulesParam   = Spring.SetUnitRulesParam
 
 local mapWidth = Game.mapSizeX
 local mapHeight = Game.mapSizeZ
@@ -867,9 +867,9 @@ local function TerraformRamp(x1, y1, z1, x2, y2, z2, terraform_width, unit, unit
 			local teamY = CallAsTeam(team, function () return spGetGroundHeight(segment[i].position.x,segment[i].position.z) end)
 			
 			local id = spCreateUnit(terraunitDefID, terraunitX, teamY or 0, terraunitZ, 0, team, true)
-			spSetUnitHealth(id, 0.01)
 			
 			if id then
+				spSetUnitHealth(id, 0.01)
 				if segment[i].along ~= rampLevels.data[rampLevels.count].along then
 					rampLevels.count = rampLevels.count + 1
 					rampLevels.data[rampLevels.count] = {along = segment[i].along, count = 0, data = {}}
@@ -1856,9 +1856,9 @@ local function TerraformArea(terraform_type, mPoint, mPoints, terraformHeight, u
             local teamY = CallAsTeam(team, function () return spGetGroundHeight(segment[i].position.x,segment[i].position.z) end)
 			
 			local id = spCreateUnit(terraunitDefID, terraunitX, teamY or 0, terraunitZ, 0, team, true)
-			spSetUnitHealth(id, 0.01)
 			
             if id then
+				spSetUnitHealth(id, 0.01)
 				unitIdGrid[segment[i].grid.x] = unitIdGrid[segment[i].grid.x] or {}
 				unitIdGrid[segment[i].grid.x][segment[i].grid.z] = id
 				
@@ -2098,7 +2098,7 @@ function GG.Terraform_RaiseWater(raiseAmount)
 		if spValidUnitID(allUnits[i]) then
 			local x,y,z = spGetUnitPosition(allUnits[i])
 			spSetUnitPosition(x,y-raiseAmount,z)
-			local commands = spGetCommandQueue(allUnits[i])
+			local commands = spGetCommandQueue(allUnits[i], -1)
 			local commandsCount = #commands
 			for j = 1, commandsCount do
 			
@@ -3252,7 +3252,11 @@ for i=1,#WeaponDefs do
 	local wd = WeaponDefs[i]
 	if wd.customParams and wd.customParams.smoothradius or wd.customParams.smoothmult then
 		wantedList[#wantedList + 1] = wd.id
-		Script.SetWatchWeapon(wd.id,true)
+		if Script.SetWatchExplosion then
+			Script.SetWatchExplosion(wd.id, true)
+		else
+			Script.SetWatchWeapon(wd.id, true)
+		end
 		SeismicWeapon[wd.id] = {
 			smooth = wd.customParams.smoothmult or DEFAULT_SMOOTH,
 			smoothradius = wd.customParams.smoothradius or wd.craterAreaOfEffect*0.5,
@@ -3362,7 +3366,7 @@ function gadget:Explosion(weaponID, x, y, z, owner)
 						if not origHeight[i][j] then
 							origHeight[i][j] = spGetGroundHeight(i,j)
 						end
-						local newHeight = (groundHeight - origHeight[i][j]) * maxSmooth * (1 - disSQ/smoothradiusSQ)^2
+						local newHeight = (groundHeight - origHeight[i][j]) * maxSmooth * (1 - disSQ/smoothradiusSQ)^1.5
 						posCount = posCount + 1
 						posX[posCount] = i
 						posY[posCount] = newHeight

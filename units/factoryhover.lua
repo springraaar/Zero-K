@@ -41,6 +41,9 @@ unitDef = {
 	aimposoffset   = [[0 0 -32]],
     midposoffset    = [[0 0 -32]],
     solid_factory   = [[8]],
+    selectionscalemult = 1,
+	factorytab       = 1,
+	shared_energy_gen = 1,
   },
 
   energyUse        = 0,
@@ -65,7 +68,7 @@ unitDef = {
   useBuildingGroundDecal = true,
   waterline        = 1,
   workerTime       = Shared.FACTORY_BUILDPOWER,
-  yardMap          = [[xoooooox ooccccoo ooccccoo ooccccoo ooccccoo ooccccoo ooccccoo xoccccox yyyyyyyy yyyyyyyy yyyyyyyy yyyyyyyy]],
+  yardMap          = [[xoooooox oooooooo oooooooo ooccccoo ooccccoo ooccccoo ooccccoo xoccccox yyyyyyyy yyyyyyyy yyyyyyyy yyyyyyyy]],
 
   featureDefs      = {
 

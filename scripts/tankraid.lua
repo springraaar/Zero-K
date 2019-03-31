@@ -18,8 +18,8 @@ local SIG_AIM1 = 1
 local ANIM_SPEED = 50
 local RESTORE_DELAY = 3000
 
-local TURRET_TURN_SPEED = 500
-local GUN_TURN_SPEED = 150
+local TURRET_TURN_SPEED = math.rad(900)
+local GUN_TURN_SPEED = math.rad(400)
 
 local WHEEL_TURN_SPEED1 = 480
 local WHEEL_TURN_SPEED1_ACCELERATION = 75
@@ -54,7 +54,7 @@ function FlameTrailThread()
 	WaitForTurn(sleeve, x_axis)
 	
 	for i = 1, 20 do
-		EmitSfx(firepoint, FIRE_W2)
+		EmitSfx(firepoint, GG.Script.FIRE_W2)
 		Sleep(400)
 	end
 	flaming = false
@@ -168,8 +168,8 @@ function script.AimWeapon(num, heading, pitch)
 	Signal(SIG_AIM1)
 	SetSignalMask(SIG_AIM1)
 	
-	Turn(turret, y_axis, heading, math.rad(TURRET_TURN_SPEED))
-	Turn(sleeve, x_axis, -pitch, math.rad(GUN_TURN_SPEED))
+	Turn(turret, y_axis, heading, TURRET_TURN_SPEED)
+	Turn(sleeve, x_axis, -pitch, GUN_TURN_SPEED)
 	
 	WaitForTurn(turret, y_axis)
 	WaitForTurn(sleeve, x_axis)
@@ -209,39 +209,43 @@ function script.BlockShot(num)
 	return flaming
 end
 
-function script.Shot(num)		
+function script.Shot(num)
 	--[[
 	Turn(firepoint, y_axis, math.rad(25))
-	EmitSfx(firepoint, FIRE_W2)
+	EmitSfx(firepoint, GG.Script.FIRE_W2)
 	Turn(firepoint, y_axis, - math.rad(25))
-	EmitSfx(firepoint, FIRE_W2)
+	EmitSfx(firepoint, GG.Script.FIRE_W2)
 	Turn(firepoint, y_axis, 0)
 	--]]
 	StartThread(Recoil)
+end
+
+function script.BlockShot(num, targetID)
+	return GG.OverkillPrevention_CheckBlock(unitID, targetID, 125, 50)
 end
 
 function script.Killed(severity, corpsetype)
 	if severity <= 25 then
 	
 		corpsetype = 1
-		Explode(body, sfxNone)
-		Explode(turret, sfxNone)
+		Explode(body, SFX.NONE)
+		Explode(turret, SFX.NONE)
 		return 1
 	end
 	if severity <= 50 then
 	
 		corpsetype = 1
-		Explode(body, sfxNone)
-		Explode(turret,sfxNone)
-		Explode(barrel, sfxFall + sfxSmoke + sfxFire)
+		Explode(body, SFX.NONE)
+		Explode(turret,SFX.NONE)
+		Explode(barrel, SFX.FALL + SFX.SMOKE + SFX.FIRE)
 		return 1
 	else
 	
 		corpsetype = 2
-		Explode(body, sfxNone)
-		Explode(turret, sfxNone)
-		Explode(barrel, sfxFall + sfxSmoke + sfxFire)
-		Explode(tracks1, sfxShatter + sfxSmoke + sfxFire)
+		Explode(body, SFX.NONE)
+		Explode(turret, SFX.NONE)
+		Explode(barrel, SFX.FALL + SFX.SMOKE + SFX.FIRE)
+		Explode(tracks1, SFX.SHATTER + SFX.SMOKE + SFX.FIRE)
 		Hide(tracks2)
 		Hide(tracks3)
 		Hide(tracks4)
@@ -265,5 +269,5 @@ function script.Create()
 	end
 	
 	StartThread(AnimationControl)
-	StartThread(SmokeUnit, smokePiece)
+	StartThread(GG.Script.SmokeUnit, smokePiece)
 end

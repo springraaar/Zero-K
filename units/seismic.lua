@@ -70,6 +70,8 @@ unitDef = {
         detachmentradius = [[256]],
         smoothmult   = [[1]],
 
+        restrict_in_widgets = 1,
+
 		stats_hide_dps = 1, -- one use
 		stats_hide_reload = 1,
 		
@@ -93,7 +95,7 @@ unitDef = {
       reloadtime              = 10,
       smokeTrail              = false,
       soundHit                = [[explosion/ex_large4]],
-      soundStart              = [[weapon/missile/tacnuke_launch2]],
+      soundStart              = [[weapon/missile/tacnuke_launch]],
       tolerance               = 4000,
       turnrate                = 18000,
       waterWeapon             = true,

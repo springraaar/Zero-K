@@ -84,10 +84,9 @@ local function IsWaiting(unitID)
 end
 
 local function RemoveAttackCommandIfFirst(unitID)
-	local states = Spring.GetUnitStates(unitID) or EMPTY_TABLE
-	local rpt = states["repeat"]
+	local rpt = Spring.Utilities.GetUnitRepeat(unitID)
 	
-	local cmd = Spring.GetUnitCommands(unitID, 1)[1]
+	local cmd = Spring.GetCommandQueue(unitID, 1)[1]
 	if (not cmd) or (cmd.id ~= CMD.ATTACK) then
 		return
 	end
@@ -123,7 +122,7 @@ local function FireMissileCheck(siloID)
 		return
 	end
 	
-	local cmd = Spring.GetUnitCommands(siloID, 1)[1]
+	local cmd = Spring.GetCommandQueue(siloID, 1)[1]
 	if (not cmd) or (cmd.id ~= CMD.ATTACK) then
 		return
 	end

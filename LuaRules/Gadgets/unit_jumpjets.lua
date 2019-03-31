@@ -15,7 +15,8 @@ if (not gadgetHandler:IsSyncedCode()) then return end
 include("LuaRules/Configs/customcmds.h.lua")
 -- needed for checks
 
-local SAVE_FILE = "Gadgets/unit_jumpjets.lua"
+local SAVE_FILE  = "Gadgets/unit_jumpjets.lua"
+local PLAY_SOUND = false
 
 local Spring    = Spring
 local MoveCtrl  = Spring.MoveCtrl
@@ -253,10 +254,12 @@ local function Jump(unitID, goal, origCmdParams, mustJump)
 	if not mustJump then
 		-- check if there is no wall in between
 		local x,z = start[1],start[3]
-		for i=0, 1, step do
-			x = x + vector[1]*step
-			z = z + vector[3]*step
-			if ( (spGetGroundHeight(x,z) - 30) > (start[2] + vector[2]*i + (1-(2*i-1)^2)*height)) then
+		local wallStep = 0.015
+		--Spring.Echo("Gadget", x, start[2], z, "vec", vector[1], vector[2], vector[3], "step", wallStep)
+		for i = 0, 1, wallStep do
+			x = x + vector[1]*wallStep
+			z = z + vector[3]*wallStep
+			if ((spGetGroundHeight(x,z) - 30) > (start[2] + vector[2]*i + (1 - (2*i - 1)^2)*height)) then
 				return false, false -- FIXME: should try to use SetMoveGoal instead of jumping!
 			end
 		end
@@ -292,7 +295,7 @@ local function Jump(unitID, goal, origCmdParams, mustJump)
 			mcSetRotation(unitID, 0, (startHeading - 2^15)/rotUnit, 0) -- keep current heading
 			mcSetRotationVelocity(unitID, 0, turn/rotUnit*step, 0)
 		end
-		if not cannotJumpMidair then	-- don't make sound if we jump with legs instead of jets
+		if PLAY_SOUND and (not cannotJumpMidair) then	-- don't make sound if we jump with legs instead of jets
 			GG.PlayFogHiddenSound("Jump", UnitDefs[unitDefID].mass/10, start[1], start[2], start[3])
 		end
 	else
@@ -310,7 +313,7 @@ local function Jump(unitID, goal, origCmdParams, mustJump)
 				return 
 			end
 			Spring.UnitScript.CallAsUnit(unitID,env.beginJump)
-			if not cannotJumpMidair then	-- don't make sound if we jump with legs instead of jets
+			if PLAY_SOUND and (not cannotJumpMidair) then	-- don't make sound if we jump with legs instead of jets
 				GG.PlayFogHiddenSound("Jump", UnitDefs[unitDefID].mass/10, start[1], start[2], start[3])
 			end
 
@@ -373,7 +376,9 @@ local function Jump(unitID, goal, origCmdParams, mustJump)
 		end
 
 		Spring.UnitScript.CallAsUnit(unitID,env.endJump)
-		GG.PlayFogHiddenSound("JumpLand", UnitDefs[unitDefID].mass/10, goal[1], goal[2], goal[3])
+		if PLAY_SOUND then
+			GG.PlayFogHiddenSound("JumpLand", UnitDefs[unitDefID].mass/10, goal[1], goal[2], goal[3])
+		end
 		local jumpEndTime = spGetGameSeconds()
 		lastJumpPosition[unitID] = origCmdParams
 		jumping[unitID] = nil
@@ -567,7 +572,6 @@ function gadget:CommandFallback(unitID, unitDefID, teamID, cmdID, cmdParams, cmd
 	local range   = jumpDef.range
 
 	if (distSqr < (range*range)) then
-		local cmdTag = spGetCommandQueue(unitID,1)[1].tag
 		if (Spring.GetUnitRulesParam(unitID, "jumpReload") >= 1) and Spring.GetUnitRulesParam(unitID,"disarmed") ~= 1 then
 			local coords = table.concat(cmdParams)
 			local currFrame = spGetGameFrame()
@@ -611,9 +615,19 @@ function gadget:UnitFromFactory(unitID, unitDefID, unitTeam, facID, facDefID)
 	if jumpDefs[unitDefID] then
 		local queue = spGetCommandQueue(unitID, 2)
 		-- The first command in the queue is a move command added by the engine.
-		if queue and queue[1] and queue[2] then
-			if queue[2].id == CMD_JUMP and queue[1].id == CMD_MOVE then
-				Spring.GiveOrderToUnit(unitID, CMD_REMOVE, {queue[1].tag}, 0)
+		local cmdID_1, cmdID_2, cmdTag_1
+		if Spring.Utilities.COMPAT_GET_ORDER then
+			local queue = Spring.GetCommandQueue(unitID, 2)
+			if queue and queue[1] and queue[2] then
+				cmdID_1, cmdID_2, cmdTag_1 = queue[1].id, queue[2].id, queue[1].tag
+			end
+		else
+			cmdID_1, _, cmdTag_1 = Spring.GetUnitCurrentCommand(unitID)
+			cmdID_2 = Spring.GetUnitCurrentCommand(unitID, 2)
+		end
+		if cmdID_1 and cmdID_2 then
+			if cmdID_1 == CMD_MOVE and cmdID_2 == CMD_JUMP then
+				Spring.GiveOrderToUnit(unitID, CMD_REMOVE, {cmdTag_1}, 0)
 			end
 		end
 	end
